@@ -1,0 +1,39 @@
+# S3 Bucket Terraform Export — Walkthrough
+
+## Summary
+
+Exported the S3 bucket `amzn-s3-nova-bucket` from the AWS account into Terraform configuration files, following the same pattern established in the `Terraform-Lambda-Functions` project.
+
+## Data Gathered via AWS CLI
+
+| Configuration | Value |
+|---|---|
+| **Bucket Name** | `amzn-s3-nova-bucket` |
+| **Region** | us-east-1 |
+| **Versioning** | Enabled |
+| **Encryption** | AES256 (SSE-S3) + BucketKeyEnabled |
+| **Public Access Block** | All 4 flags = true (fully blocked) |
+| **Bucket Policy** | SES allowed to PutObject |
+| **Tags** | Project, Bucket, Environment |
+| **Notifications** | 2 Lambda triggers |
+| **Lifecycle / CORS / Logging** | Not configured |
+
+### Lambda Notification Triggers
+1. `email-attachment-parser` → triggered on `s3:ObjectCreated:*` with prefix `raw-emails/`
+2. `Nova-Extractor-Lambda` → triggered on `s3:ObjectCreated:*` with prefix `email-attachment/`
+
+## Files Created
+
+| File | Purpose |
+|---|---|
+| [main.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Terraform-S3-Bucket/main.tf) | S3 bucket, versioning, encryption, public access block, bucket policy, ownership controls, Lambda notifications |
+| [variables.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Terraform-S3-Bucket/variables.tf) | `aws_region` and `aws_account_id` variables |
+| [versions.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Terraform-S3-Bucket/versions.tf) | Terraform ≥1.0 + AWS provider ~>5.0 |
+| [outputs.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Terraform-S3-Bucket/outputs.tf) | Bucket ID, ARN, region, domain name |
+| [s3_config.txt](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Terraform-S3-Bucket/s3_config.txt) | Raw config reference |
+
+## Validation
+
+- ✅ `terraform init` — AWS provider v5.100.0 installed
+- ✅ `terraform validate` — Configuration is valid
+- ✅ `terraform fmt -check` — Formatting passed

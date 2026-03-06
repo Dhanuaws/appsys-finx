@@ -1,0 +1,39 @@
+# Lambda Terraform Files — Generated from AWS Account
+
+## What Was Done
+
+Terraformer had a known Windows compatibility bug (`exec: no command`), so we used **AWS CLI** to extract your existing Lambda setup and generated Terraform files from the live data.
+
+## Files Generated
+
+| File | Purpose |
+|------|---------|
+| [main.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Email-Parser-Lambda/main.tf) | IAM roles, 3 Lambda functions, CloudWatch log groups, SQS trigger |
+| [variables.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Email-Parser-Lambda/variables.tf) | AWS region and account ID variables |
+| [versions.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Email-Parser-Lambda/versions.tf) | Terraform and AWS provider version constraints |
+| [outputs.tf](file:///c:/Users/lenov/OneDrive%20-%20Appsys%20Global%20Pvt%20Ltd/Desktop/AI%20Agent/Terraforms/Email-Parser-Lambda/outputs.tf) | Lambda function and IAM role ARN outputs |
+
+## Resources Captured
+
+### Lambda Functions
+| Function | Handler | Timeout | Trigger |
+|----------|---------|---------|---------|
+| `email-attachment-parser` | `lambda_function.lambda_handler` | 30s | — |
+| `Nova-Extractor-Lambda` | `lambda_nova_extractor_trigger.lambda_handler` | 45s | — |
+| `invoice-audit-writer-lamdba` | `lambda_function.lambda_handler` | 3s | SQS queue |
+
+### Supporting Resources
+- 3 IAM roles with Lambda assume-role policy
+- 3 CloudWatch log groups
+- 1 SQS event source mapping (audit writer ← SQS queue)
+
+## Validation
+
+✅ `terraform validate` — **Success!**
+✅ `terraform fmt` — Formatted
+
+## ⚠️ Important Notes
+
+1. **Runtime**: Changed from `python3.14` (your AWS config) to `python3.13` because the Terraform AWS provider doesn't support 3.14 yet
+2. **Deployment packages**: Placeholder ZIPs in `src/` — replace with your actual Lambda code ZIPs before running `terraform apply`
+3. **Sensitive values**: The `WORKATO_API_TOKEN` env var is hardcoded — consider using `aws_ssm_parameter` or `aws_secretsmanager_secret` instead

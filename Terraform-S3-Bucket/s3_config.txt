@@ -1,0 +1,58 @@
+# =============================================================================
+# S3 Bucket Configuration Export - amzn-s3-nova-bucket
+# Exported on: 2026-03-05
+# =============================================================================
+
+## Bucket Name: amzn-s3-nova-bucket
+## Region: us-east-1 (LocationConstraint: null)
+## Creation Date: 2026-02-13T12:27:36+00:00
+
+## Versioning
+Status: Enabled
+
+## Server-Side Encryption
+Algorithm: AES256 (SSE-S3)
+BucketKeyEnabled: true
+
+## Public Access Block
+BlockPublicAcls: true
+IgnorePublicAcls: true
+BlockPublicPolicy: true
+RestrictPublicBuckets: true
+
+## Bucket Policy
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSESPuts",
+      "Effect": "Allow",
+      "Principal": { "Service": "ses.amazonaws.com" },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::amzn-s3-nova-bucket/*",
+      "Condition": {
+        "StringEquals": { "aws:Referer": "303289350965" }
+      }
+    }
+  ]
+}
+
+## Tags
+Project: AppSys-inVi
+Bucket: S3 Bucket to Store Attachments from the Incoming mail
+Environment: appsys-invi-dev
+
+## ACL
+Owner FULL_CONTROL (default private)
+
+## Notification Configuration
+Lambda 1: email-attachment-parser
+  - Event: s3:ObjectCreated:*
+  - Filter Prefix: raw-emails/
+Lambda 2: Nova-Extractor-Lambda
+  - Event: s3:ObjectCreated:*
+  - Filter Prefix: email-attachment/
+
+## Lifecycle: Not configured
+## CORS: Not configured
+## Logging: Not configured

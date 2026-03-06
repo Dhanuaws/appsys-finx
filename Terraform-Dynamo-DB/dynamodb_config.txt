@@ -1,0 +1,45 @@
+# =============================================================================
+# DynamoDB Configuration Export
+# Exported on: 2026-03-05
+# =============================================================================
+
+## Table 1: FusionInvoicesTable
+- Partition Key: InvoiceNumber (S)
+- Sort Key: Supplier (S)
+- Billing Mode: PAY_PER_REQUEST (On-Demand)
+- Table Class: STANDARD
+- Deletion Protection: false
+- TTL: DISABLED
+- PITR: DISABLED
+- GSIs: None
+- Tags: Project=AppSys-inVi, Environment=appsys-invi-dev
+
+## Table 2: InvoiceAuditLayer
+- Partition Key: AuditId (S)
+- Sort Key: None
+- Billing Mode: PAY_PER_REQUEST (On-Demand)
+- Table Class: STANDARD
+- Deletion Protection: false
+- TTL: DISABLED
+- PITR: DISABLED
+- GSIs:
+  1. Supplier-DetectedAt-index (PK: Supplier, SK: DetectedAt, Projection: ALL)
+  2. RejectCode-DetectedAt-index (PK: RejectCode, SK: DetectedAt, Projection: ALL)
+- Tags: Project=AppSys-inVi, Environment=appsys-invi-dev, Component=DuplicateAuditDB
+
+## Table 3: RawEmailMetaData
+- Partition Key: MessageID (S)
+- Sort Key: ReceivedDate (S)
+- Billing Mode: PAY_PER_REQUEST (On-Demand)
+- Table Class: STANDARD
+- Deletion Protection: false
+- TTL: DISABLED
+- PITR: DISABLED
+- GSIs: None
+- Tags: Project=AppSys-inVi, Environment=appsys-invi-dev
+
+## Notes on IAM
+- IAM roles and policies that access these tables are defined in the
+  Terraform-Lambda-Functions project (Lambda execution roles).
+- DynamoDB does not have its own IAM roles; access is controlled via
+  IAM policies on the calling services (Lambda, etc.).
