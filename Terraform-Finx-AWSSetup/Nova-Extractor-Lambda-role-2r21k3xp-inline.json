@@ -1,9 +1,0 @@
-﻿{
-    "PolicyNames": [
-        "AppSys-InVi-Audit-SQS-Send",
-        "EmailParser-AuditSQSSend",
-        "Extract-Nova-Dynamo",
-        "Nova-Extract-S3Policy",
-        "Nova-Extractor-Lambda-DynamoDB-Policy"
-    ]
-}

@@ -1,9 +1,0 @@
-﻿{
-    "PolicyNames": [
-        "email-parser-get-fusiontable-policy",
-        "EmailParser-AuditSQSSend",
-        "emailparser-nova-lite-policy",
-        "RawEmailMetaDataWriteAccess",
-        "S3ReadWriteEmailParserPolicy"
-    ]
-}
