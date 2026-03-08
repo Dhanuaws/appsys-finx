@@ -1,0 +1,20 @@
+﻿{
+    "RoleName": "invoice-audit-writer-lamdba-role-lh1bhh2c",
+    "PolicyName": "InvoiceAuditLayerDynamoDBAccess",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "AllowInvoiceAuditLayerWrite",
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:PutItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DescribeTable"
+                ],
+                "Resource": "arn:aws:dynamodb:us-east-1:303289350965:table/InvoiceAuditLayer"
+            }
+        ]
+    }
+}

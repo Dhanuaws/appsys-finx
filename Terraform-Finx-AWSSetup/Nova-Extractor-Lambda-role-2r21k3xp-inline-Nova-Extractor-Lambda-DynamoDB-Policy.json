@@ -1,0 +1,25 @@
+﻿{
+    "RoleName": "Nova-Extractor-Lambda-role-2r21k3xp",
+    "PolicyName": "Nova-Extractor-Lambda-DynamoDB-Policy",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "AllowFusionInvoicesTableAccess",
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:PutItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:Scan",
+                    "dynamodb:Query",
+                    "dynamodb:DescribeTable"
+                ],
+                "Resource": [
+                    "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable",
+                    "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable/index/*"
+                ]
+            }
+        ]
+    }
+}

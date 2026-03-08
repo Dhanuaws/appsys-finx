@@ -1,0 +1,40 @@
+﻿{
+    "Role": {
+        "Path": "/service-role/",
+        "RoleName": "invoice-audit-writer-lamdba-role-lh1bhh2c",
+        "RoleId": "AROAUNHLUHM2ZUXEJM7YX",
+        "Arn": "arn:aws:iam::303289350965:role/service-role/invoice-audit-writer-lamdba-role-lh1bhh2c",
+        "CreateDate": "2026-02-25T19:23:19+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+            {
+                "Key": "Project",
+                "Value": "AppSys-inVi"
+            },
+            {
+                "Key": "Environment",
+                "Value": "appsys-invi-dev"
+            },
+            {
+                "Key": "ManagedBy",
+                "Value": "terraform"
+            }
+        ],
+        "RoleLastUsed": {
+            "LastUsedDate": "2026-03-08T10:38:20+00:00",
+            "Region": "us-east-1"
+        }
+    }
+}

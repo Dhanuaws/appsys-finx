@@ -1,0 +1,40 @@
+﻿{
+    "Role": {
+        "Path": "/service-role/",
+        "RoleName": "email-attachment-parser-role-h9ukc1hg",
+        "RoleId": "AROAUNHLUHM2WXATDYN7H",
+        "Arn": "arn:aws:iam::303289350965:role/service-role/email-attachment-parser-role-h9ukc1hg",
+        "CreateDate": "2026-02-14T14:40:11+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "MaxSessionDuration": 3600,
+        "Tags": [
+            {
+                "Key": "Project",
+                "Value": "AppSys-inVi"
+            },
+            {
+                "Key": "Environment",
+                "Value": "appsys-invi-dev"
+            },
+            {
+                "Key": "ManagedBy",
+                "Value": "terraform"
+            }
+        ],
+        "RoleLastUsed": {
+            "LastUsedDate": "2026-03-02T08:28:04+00:00",
+            "Region": "us-east-1"
+        }
+    }
+}

@@ -1,0 +1,22 @@
+﻿{
+    "RoleName": "email-attachment-parser-role-h9ukc1hg",
+    "PolicyName": "RawEmailMetaDataWriteAccess",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:GetItem",
+                    "dynamodb:Query"
+                ],
+                "Resource": [
+                    "arn:aws:dynamodb:us-east-1:303289350965:table/RawEmailMetaData",
+                    "arn:aws:dynamodb:us-east-1:303289350965:table/RawEmailMetaData/index/FileHash-index"
+                ]
+            }
+        ]
+    }
+}

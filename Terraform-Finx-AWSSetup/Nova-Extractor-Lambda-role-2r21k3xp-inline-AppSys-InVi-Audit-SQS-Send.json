@@ -1,0 +1,15 @@
+﻿{
+    "RoleName": "Nova-Extractor-Lambda-role-2r21k3xp",
+    "PolicyName": "AppSys-InVi-Audit-SQS-Send",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "AllowSendAuditToSQS",
+                "Effect": "Allow",
+                "Action": "sqs:SendMessage",
+                "Resource": "arn:aws:sqs:us-east-1:303289350965:appsys-invi-invoice-audit-events-queue"
+            }
+        ]
+    }
+}

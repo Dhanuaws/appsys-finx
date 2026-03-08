@@ -1,0 +1,16 @@
+﻿{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "AWSLambdaBasicExecutionRole-47ff6b3c-3c18-4eed-a4aa-2a95aa3abfe0",
+            "PolicyArn": "arn:aws:iam::303289350965:policy/service-role/AWSLambdaBasicExecutionRole-47ff6b3c-3c18-4eed-a4aa-2a95aa3abfe0"
+        },
+        {
+            "PolicyName": "AWSLambdaSQSQueueExecutionRole",
+            "PolicyArn": "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+        },
+        {
+            "PolicyName": "AmazonSQSFullAccess",
+            "PolicyArn": "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+        }
+    ]
+}

@@ -1,0 +1,373 @@
+﻿{
+    "invoice-audit-writer-lamdba-role-lh1bhh2c":  {
+                                                      "attached":  [
+                                                                       {
+                                                                           "PolicyName":  "AWSLambdaBasicExecutionRole-dcfd4286-0b3c-42af-874f-ca061af37a55",
+                                                                           "PolicyArn":  "arn:aws:iam::303289350965:policy/service-role/AWSLambdaBasicExecutionRole-dcfd4286-0b3c-42af-874f-ca061af37a55"
+                                                                       },
+                                                                       {
+                                                                           "PolicyName":  "AWSLambdaSQSQueueExecutionRole",
+                                                                           "PolicyArn":  "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+                                                                       }
+                                                                   ],
+                                                      "inline":  {
+                                                                     "InvoiceAuditLayerDynamoDBAccess":  {
+                                                                                                             "Version":  "2012-10-17",
+                                                                                                             "Statement":  [
+                                                                                                                               {
+                                                                                                                                   "Sid":  "AllowInvoiceAuditLayerWrite",
+                                                                                                                                   "Effect":  "Allow",
+                                                                                                                                   "Action":  [
+                                                                                                                                                  "dynamodb:PutItem",
+                                                                                                                                                  "dynamodb:GetItem",
+                                                                                                                                                  "dynamodb:UpdateItem",
+                                                                                                                                                  "dynamodb:DescribeTable"
+                                                                                                                                              ],
+                                                                                                                                   "Resource":  "arn:aws:dynamodb:us-east-1:303289350965:table/InvoiceAuditLayer"
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                         }
+                                                                 },
+                                                      "role":  {
+                                                                   "Role":  {
+                                                                                "Path":  "/service-role/",
+                                                                                "RoleName":  "invoice-audit-writer-lamdba-role-lh1bhh2c",
+                                                                                "RoleId":  "AROAUNHLUHM2ZUXEJM7YX",
+                                                                                "Arn":  "arn:aws:iam::303289350965:role/service-role/invoice-audit-writer-lamdba-role-lh1bhh2c",
+                                                                                "CreateDate":  "2026-02-25T19:23:19+00:00",
+                                                                                "AssumeRolePolicyDocument":  {
+                                                                                                                 "Version":  "2012-10-17",
+                                                                                                                 "Statement":  [
+                                                                                                                                   {
+                                                                                                                                       "Effect":  "Allow",
+                                                                                                                                       "Principal":  {
+                                                                                                                                                         "Service":  "lambda.amazonaws.com"
+                                                                                                                                                     },
+                                                                                                                                       "Action":  "sts:AssumeRole"
+                                                                                                                                   }
+                                                                                                                               ]
+                                                                                                             },
+                                                                                "MaxSessionDuration":  3600,
+                                                                                "Tags":  [
+                                                                                             {
+                                                                                                 "Key":  "Project",
+                                                                                                 "Value":  "AppSys-inVi"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Key":  "Environment",
+                                                                                                 "Value":  "appsys-invi-dev"
+                                                                                             },
+                                                                                             {
+                                                                                                 "Key":  "ManagedBy",
+                                                                                                 "Value":  "terraform"
+                                                                                             }
+                                                                                         ],
+                                                                                "RoleLastUsed":  {
+                                                                                                     "LastUsedDate":  "2026-03-08T10:38:20+00:00",
+                                                                                                     "Region":  "us-east-1"
+                                                                                                 }
+                                                                            }
+                                                               }
+                                                  },
+    "Nova-Extractor-Lambda-role-2r21k3xp":  {
+                                                "attached":  [
+                                                                 {
+                                                                     "PolicyName":  "AWSLambdaBasicExecutionRole-3ef283d8-60db-4044-90fe-b3c41d5c2ffb",
+                                                                     "PolicyArn":  "arn:aws:iam::303289350965:policy/service-role/AWSLambdaBasicExecutionRole-3ef283d8-60db-4044-90fe-b3c41d5c2ffb"
+                                                                 },
+                                                                 {
+                                                                     "PolicyName":  "AWSLambdaSQSQueueExecutionRole",
+                                                                     "PolicyArn":  "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+                                                                 },
+                                                                 {
+                                                                     "PolicyName":  "AmazonSQSFullAccess",
+                                                                     "PolicyArn":  "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+                                                                 }
+                                                             ],
+                                                "inline":  {
+                                                               "EmailParser-AuditSQSSend":  {
+                                                                                                "Version":  "2012-10-17",
+                                                                                                "Statement":  [
+                                                                                                                  {
+                                                                                                                      "Sid":  "AllowAuditSQSSend",
+                                                                                                                      "Effect":  "Allow",
+                                                                                                                      "Action":  [
+                                                                                                                                     "sqs:SendMessage",
+                                                                                                                                     "sqs:GetQueueAttributes",
+                                                                                                                                     "sqs:GetQueueUrl"
+                                                                                                                                 ],
+                                                                                                                      "Resource":  "arn:aws:sqs:us-east-1:303289350965:appsyn-invi-invoice-audit-events-queue"
+                                                                                                                  }
+                                                                                                              ]
+                                                                                            },
+                                                               "Nova-Extractor-Lambda-DynamoDB-Policy":  {
+                                                                                                             "Version":  "2012-10-17",
+                                                                                                             "Statement":  [
+                                                                                                                               {
+                                                                                                                                   "Sid":  "AllowFusionInvoicesTableAccess",
+                                                                                                                                   "Effect":  "Allow",
+                                                                                                                                   "Action":  [
+                                                                                                                                                  "dynamodb:PutItem",
+                                                                                                                                                  "dynamodb:GetItem",
+                                                                                                                                                  "dynamodb:UpdateItem",
+                                                                                                                                                  "dynamodb:Scan",
+                                                                                                                                                  "dynamodb:Query",
+                                                                                                                                                  "dynamodb:DescribeTable"
+                                                                                                                                              ],
+                                                                                                                                   "Resource":  [
+                                                                                                                                                    "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable",
+                                                                                                                                                    "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable/index/*"
+                                                                                                                                                ]
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                         },
+                                                               "Extract-Nova-Dynamo":  {
+                                                                                           "Version":  "2012-10-17",
+                                                                                           "Statement":  [
+                                                                                                             {
+                                                                                                                 "Effect":  "Allow",
+                                                                                                                 "Action":  [
+                                                                                                                                "s3:GetObject"
+                                                                                                                            ],
+                                                                                                                 "Resource":  "arn:aws:s3:::email-attachment/*"
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "Effect":  "Allow",
+                                                                                                                 "Action":  [
+                                                                                                                                "dynamodb:PutItem"
+                                                                                                                            ],
+                                                                                                                 "Resource":  "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable"
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "Effect":  "Allow",
+                                                                                                                 "Action":  [
+                                                                                                                                "bedrock:InvokeModel",
+                                                                                                                                "bedrock:InvokeModelWithResponseStream"
+                                                                                                                            ],
+                                                                                                                 "Resource":  "*"
+                                                                                                             }
+                                                                                                         ]
+                                                                                       },
+                                                               "Nova-Extract-S3Policy":  {
+                                                                                             "Version":  "2012-10-17",
+                                                                                             "Statement":  [
+                                                                                                               {
+                                                                                                                   "Sid":  "S3Access",
+                                                                                                                   "Effect":  "Allow",
+                                                                                                                   "Action":  [
+                                                                                                                                  "s3:GetObject",
+                                                                                                                                  "s3:PutObject"
+                                                                                                                              ],
+                                                                                                                   "Resource":  [
+                                                                                                                                    "arn:aws:s3:::amzn-s3-nova-bucket/email-attachment/*",
+                                                                                                                                    "arn:aws:s3:::amzn-s3-nova-bucket/Nova-Extract-Json/*"
+                                                                                                                                ]
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "Sid":  "BedrockAccess",
+                                                                                                                   "Effect":  "Allow",
+                                                                                                                   "Action":  [
+                                                                                                                                  "bedrock:InvokeModel"
+                                                                                                                              ],
+                                                                                                                   "Resource":  [
+                                                                                                                                    "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0",
+                                                                                                                                    "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"
+                                                                                                                                ]
+                                                                                                               }
+                                                                                                           ]
+                                                                                         },
+                                                               "AppSys-InVi-Audit-SQS-Send":  {
+                                                                                                  "Version":  "2012-10-17",
+                                                                                                  "Statement":  [
+                                                                                                                    {
+                                                                                                                        "Sid":  "AllowSendAuditToSQS",
+                                                                                                                        "Effect":  "Allow",
+                                                                                                                        "Action":  "sqs:SendMessage",
+                                                                                                                        "Resource":  "arn:aws:sqs:us-east-1:303289350965:appsys-invi-invoice-audit-events-queue"
+                                                                                                                    }
+                                                                                                                ]
+                                                                                              }
+                                                           },
+                                                "role":  {
+                                                             "Role":  {
+                                                                          "Path":  "/service-role/",
+                                                                          "RoleName":  "Nova-Extractor-Lambda-role-2r21k3xp",
+                                                                          "RoleId":  "AROAUNHLUHM23J4RBFSSU",
+                                                                          "Arn":  "arn:aws:iam::303289350965:role/service-role/Nova-Extractor-Lambda-role-2r21k3xp",
+                                                                          "CreateDate":  "2026-02-15T13:08:32+00:00",
+                                                                          "AssumeRolePolicyDocument":  {
+                                                                                                           "Version":  "2012-10-17",
+                                                                                                           "Statement":  [
+                                                                                                                             {
+                                                                                                                                 "Effect":  "Allow",
+                                                                                                                                 "Principal":  {
+                                                                                                                                                   "Service":  "lambda.amazonaws.com"
+                                                                                                                                               },
+                                                                                                                                 "Action":  "sts:AssumeRole"
+                                                                                                                             }
+                                                                                                                         ]
+                                                                                                       },
+                                                                          "MaxSessionDuration":  3600,
+                                                                          "Tags":  [
+                                                                                       {
+                                                                                           "Key":  "Project",
+                                                                                           "Value":  "AppSys-inVi"
+                                                                                       },
+                                                                                       {
+                                                                                           "Key":  "Environment",
+                                                                                           "Value":  "appsys-invi-dev"
+                                                                                       },
+                                                                                       {
+                                                                                           "Key":  "ManagedBy",
+                                                                                           "Value":  "terraform"
+                                                                                       }
+                                                                                   ],
+                                                                          "RoleLastUsed":  {
+                                                                                               "LastUsedDate":  "2026-03-02T06:16:19+00:00",
+                                                                                               "Region":  "us-east-1"
+                                                                                           }
+                                                                      }
+                                                         }
+                                            },
+    "email-attachment-parser-role-h9ukc1hg":  {
+                                                  "attached":  [
+                                                                   {
+                                                                       "PolicyName":  "AWSLambdaBasicExecutionRole-47ff6b3c-3c18-4eed-a4aa-2a95aa3abfe0",
+                                                                       "PolicyArn":  "arn:aws:iam::303289350965:policy/service-role/AWSLambdaBasicExecutionRole-47ff6b3c-3c18-4eed-a4aa-2a95aa3abfe0"
+                                                                   },
+                                                                   {
+                                                                       "PolicyName":  "AWSLambdaSQSQueueExecutionRole",
+                                                                       "PolicyArn":  "arn:aws:iam::aws:policy/service-role/AWSLambdaSQSQueueExecutionRole"
+                                                                   },
+                                                                   {
+                                                                       "PolicyName":  "AmazonSQSFullAccess",
+                                                                       "PolicyArn":  "arn:aws:iam::aws:policy/AmazonSQSFullAccess"
+                                                                   }
+                                                               ],
+                                                  "inline":  {
+                                                                 "EmailParser-AuditSQSSend":  {
+                                                                                                  "Version":  "2012-10-17",
+                                                                                                  "Statement":  [
+                                                                                                                    {
+                                                                                                                        "Sid":  "AllowAuditSQSSend",
+                                                                                                                        "Effect":  "Allow",
+                                                                                                                        "Action":  [
+                                                                                                                                       "sqs:SendMessage",
+                                                                                                                                       "sqs:GetQueueAttributes",
+                                                                                                                                       "sqs:GetQueueUrl"
+                                                                                                                                   ],
+                                                                                                                        "Resource":  "arn:aws:sqs:us-east-1:303289350965:appsys-invi-invoice-audit-events-queue"
+                                                                                                                    }
+                                                                                                                ]
+                                                                                              },
+                                                                 "RawEmailMetaDataWriteAccess":  {
+                                                                                                     "Version":  "2012-10-17",
+                                                                                                     "Statement":  [
+                                                                                                                       {
+                                                                                                                           "Effect":  "Allow",
+                                                                                                                           "Action":  [
+                                                                                                                                          "dynamodb:PutItem",
+                                                                                                                                          "dynamodb:UpdateItem",
+                                                                                                                                          "dynamodb:GetItem",
+                                                                                                                                          "dynamodb:Query"
+                                                                                                                                      ],
+                                                                                                                           "Resource":  [
+                                                                                                                                            "arn:aws:dynamodb:us-east-1:303289350965:table/RawEmailMetaData",
+                                                                                                                                            "arn:aws:dynamodb:us-east-1:303289350965:table/RawEmailMetaData/index/FileHash-index"
+                                                                                                                                        ]
+                                                                                                                       }
+                                                                                                                   ]
+                                                                                                 },
+                                                                 "S3ReadWriteEmailParserPolicy":  {
+                                                                                                      "Version":  "2012-10-17",
+                                                                                                      "Statement":  [
+                                                                                                                        {
+                                                                                                                            "Sid":  "AllowBucketListing",
+                                                                                                                            "Effect":  "Allow",
+                                                                                                                            "Action":  "s3:ListBucket",
+                                                                                                                            "Resource":  "arn:aws:s3:::amzn-s3-nova-bucket"
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "Sid":  "AllowReadWriteInFolders",
+                                                                                                                            "Effect":  "Allow",
+                                                                                                                            "Action":  [
+                                                                                                                                           "s3:GetObject",
+                                                                                                                                           "s3:PutObject"
+                                                                                                                                       ],
+                                                                                                                            "Resource":  [
+                                                                                                                                             "arn:aws:s3:::amzn-s3-nova-bucket/raw-emails/*",
+                                                                                                                                             "arn:aws:s3:::amzn-s3-nova-bucket/email-attachment/*"
+                                                                                                                                         ]
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                  },
+                                                                 "email-parser-get-fusiontable-policy":  {
+                                                                                                             "Version":  "2012-10-17",
+                                                                                                             "Statement":  [
+                                                                                                                               {
+                                                                                                                                   "Sid":  "AllowReadFusionTable",
+                                                                                                                                   "Effect":  "Allow",
+                                                                                                                                   "Action":  [
+                                                                                                                                                  "dynamodb:GetItem",
+                                                                                                                                                  "dynamodb:Query"
+                                                                                                                                              ],
+                                                                                                                                   "Resource":  "arn:aws:dynamodb:us-east-1:303289350965:table/FusionInvoicesTable"
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                         },
+                                                                 "emailparser-nova-lite-policy":  {
+                                                                                                      "Version":  "2012-10-17",
+                                                                                                      "Statement":  [
+                                                                                                                        {
+                                                                                                                            "Sid":  "AllowBedrockNovaLite",
+                                                                                                                            "Effect":  "Allow",
+                                                                                                                            "Action":  [
+                                                                                                                                           "bedrock:InvokeModel"
+                                                                                                                                       ],
+                                                                                                                            "Resource":  "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                  }
+                                                             },
+                                                  "role":  {
+                                                               "Role":  {
+                                                                            "Path":  "/service-role/",
+                                                                            "RoleName":  "email-attachment-parser-role-h9ukc1hg",
+                                                                            "RoleId":  "AROAUNHLUHM2WXATDYN7H",
+                                                                            "Arn":  "arn:aws:iam::303289350965:role/service-role/email-attachment-parser-role-h9ukc1hg",
+                                                                            "CreateDate":  "2026-02-14T14:40:11+00:00",
+                                                                            "AssumeRolePolicyDocument":  {
+                                                                                                             "Version":  "2012-10-17",
+                                                                                                             "Statement":  [
+                                                                                                                               {
+                                                                                                                                   "Effect":  "Allow",
+                                                                                                                                   "Principal":  {
+                                                                                                                                                     "Service":  "lambda.amazonaws.com"
+                                                                                                                                                 },
+                                                                                                                                   "Action":  "sts:AssumeRole"
+                                                                                                                               }
+                                                                                                                           ]
+                                                                                                         },
+                                                                            "MaxSessionDuration":  3600,
+                                                                            "Tags":  [
+                                                                                         {
+                                                                                             "Key":  "Project",
+                                                                                             "Value":  "AppSys-inVi"
+                                                                                         },
+                                                                                         {
+                                                                                             "Key":  "Environment",
+                                                                                             "Value":  "appsys-invi-dev"
+                                                                                         },
+                                                                                         {
+                                                                                             "Key":  "ManagedBy",
+                                                                                             "Value":  "terraform"
+                                                                                         }
+                                                                                     ],
+                                                                            "RoleLastUsed":  {
+                                                                                                 "LastUsedDate":  "2026-03-02T08:28:04+00:00",
+                                                                                                 "Region":  "us-east-1"
+                                                                                             }
+                                                                        }
+                                                           }
+                                              }
+}

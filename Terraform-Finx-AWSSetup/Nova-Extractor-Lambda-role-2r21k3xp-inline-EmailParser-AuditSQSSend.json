@@ -1,0 +1,19 @@
+﻿{
+    "RoleName": "Nova-Extractor-Lambda-role-2r21k3xp",
+    "PolicyName": "EmailParser-AuditSQSSend",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "AllowAuditSQSSend",
+                "Effect": "Allow",
+                "Action": [
+                    "sqs:SendMessage",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl"
+                ],
+                "Resource": "arn:aws:sqs:us-east-1:303289350965:appsyn-invi-invoice-audit-events-queue"
+            }
+        ]
+    }
+}
