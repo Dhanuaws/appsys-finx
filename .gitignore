@@ -5,3 +5,7 @@
 .terraform.lock.hcl
 *.tfvars
 crash.log
+
+# Security exclusions
+*.json
+build/
