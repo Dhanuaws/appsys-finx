@@ -1,0 +1,137 @@
+name: 'Terraform Deploy to Dev'
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'frontend/**'
+      - 'backend/**'
+  pull_request:
+    paths-ignore:
+      - 'frontend/**'
+      - 'backend/**'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+      AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHubActions_TerraformRole"
+      AWS_REGION: "us-east-1"
+      TF_VERSION: "1.9.0"
+      # ── Chatbot feature flags ──
+      # These are off by default; enable manually or via repo vars once ready
+      TF_VAR_enable_cognito: ${{ vars.ENABLE_COGNITO || 'false' }}
+      TF_VAR_enable_chatbot: ${{ vars.ENABLE_CHATBOT || 'false' }}
+      TF_VAR_chatbot_image_tag: ${{ vars.CHATBOT_IMAGE_TAG || 'latest' }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials via OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ env.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Download Lambda artifacts from S3
+      run: |
+        mkdir -p .lambda_artifacts/appsys-invi-iac/artifacts
+        # Lambda zips are stored in the state bucket under lambda-artifacts/
+        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/email-attachment-parser.zip \
+          .lambda_artifacts/appsys-invi-iac/artifacts/email-attachment-parser.zip
+        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/Nova-Extractor-Lambda.zip \
+          .lambda_artifacts/appsys-invi-iac/artifacts/Nova-Extractor-Lambda.zip
+        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/invoice-audit-writer-lamdba.zip \
+          .lambda_artifacts/appsys-invi-iac/artifacts/invoice-audit-writer-lamdba.zip
+        echo "✅ Lambda artifacts downloaded"
+        ls -lh .lambda_artifacts/appsys-invi-iac/artifacts/
+
+    - name: Terraform Init
+      id: init
+      run: |
+        terraform init \
+          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+          -backend-config="key=dev/terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="encrypt=true"
+
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+
+    - name: Terraform Plan
+      id: plan
+      if: github.event_name == 'pull_request'
+      run: terraform plan -no-color -out=tfplan
+      continue-on-error: true
+
+    - name: Show plan summary
+      id: plan_summary
+      if: github.event_name == 'pull_request'
+      run: |
+        terraform show -no-color tfplan | grep -E "Plan:|No changes" | head -1 > plan_summary.txt
+        echo "summary=$(cat plan_summary.txt)" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
+    - name: Update Pull Request
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      env:
+        PLAN: "${{ steps.plan.outputs.stdout }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const summary = `${{ steps.plan_summary.outputs.summary }}` || 'No plan output';
+          const output = `## Terraform Plan 📖 \`${{ steps.plan.outcome }}\`
+
+          **Summary:** ${summary}
+
+          <details><summary>Full Plan Output</summary>
+
+          \`\`\`terraform
+          ${process.env.PLAN}
+          \`\`\`
+
+          </details>
+
+          > Chatbot enabled: \`${{ env.TF_VAR_enable_chatbot }}\` | Cognito enabled: \`${{ env.TF_VAR_enable_cognito }}\`
+          `;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Terraform Plan Status Check
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: terraform apply -auto-approve
+
+    - name: Summary
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "### ✅ Terraform Apply Complete" >> $GITHUB_STEP_SUMMARY
+        echo "- Region: ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Chatbot enabled: ${{ env.TF_VAR_enable_chatbot }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Cognito enabled: ${{ env.TF_VAR_enable_cognito }}" >> $GITHUB_STEP_SUMMARY
+

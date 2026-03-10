@@ -1,0 +1,93 @@
+name: 'Frontend — Build & Validate'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-deploy.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: "us-east-1"
+  AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHubActions_TerraformRole"
+  NODE_VERSION: "24"
+
+jobs:
+  build-and-validate:
+    name: Build & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: TypeScript type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Next.js build
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_APP_NAME: "FinX Invoice Intelligence"
+          # Backend URL injected at build time (for static analysis).
+          # The real value comes from the App Runner output.
+          NEXT_PUBLIC_BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://localhost:8000' }}
+        run: npm run build
+
+      - name: Check build output size
+        working-directory: frontend
+        run: |
+          echo "### 📦 Build Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          du -sh .next/ >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: nextjs-build-${{ github.sha }}
+          path: |
+            frontend/.next/
+            frontend/public/
+          retention-days: 7
+
+  # ── Optional: deploy to AWS Amplify (uncomment when Amplify is set up) ──
+  # deploy-amplify:
+  #   name: Deploy to Amplify
+  #   needs: build-and-validate
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   environment: dev
+  #   steps:
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v4
+  #       with:
+  #         role-to-assume: ${{ env.AWS_ROLE_ARN }}
+  #         aws-region: ${{ env.AWS_REGION }}
+  #     - name: Trigger Amplify deploy
+  #       run: |
+  #         aws amplify start-job \
+  #           --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+  #           --branch-name main \
+  #           --job-type RELEASE

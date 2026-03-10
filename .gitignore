@@ -1,0 +1,38 @@
+# Terraform state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan.out
+.terraform.lock.hcl
+
+# Local secrets & env files
+**/.env
+**/.env.local
+**/.env.*.local
+backend/.env
+
+# Lambda artifacts (large zips — uploaded separately in CI)
+.lambda_artifacts/
+
+# Next.js build output
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.venv/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

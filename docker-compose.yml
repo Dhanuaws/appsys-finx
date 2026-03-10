@@ -1,0 +1,65 @@
+version: '3.9'
+
+# FinX Local Development Stack
+# Runs the FastAPI backend alongside the Next.js frontend.
+# AWS services (DynamoDB, S3, Bedrock) use real AWS credentials.
+#
+# Usage:
+#   docker compose up -d
+#   # Frontend:  http://localhost:3000
+#   # Backend:   http://localhost:8000
+#   # API Docs:  http://localhost:8000/docs
+#
+# Requirements:
+#   - AWS credentials configured (~/.aws/credentials or environment)
+#   - backend/.env file with DEV_MODE=true
+
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finx-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Override for local hot-reload
+      DEV_MODE: "true"
+      AWS_REGION: "us-east-1"
+    volumes:
+      # Hot-reload: mount app directory
+      - ./backend/app:/app/app:ro
+      # AWS credentials (local development only)
+      - ${HOME}/.aws:/home/finx/.aws:ro
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── Next.js Frontend ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: finx-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: "http://backend:8000"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "local-dev-secret-change-in-prod"
+      NODE_ENV: "development"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
