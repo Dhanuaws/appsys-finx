@@ -1,0 +1,12 @@
+aws_region   = "us-east-1"
+project      = "AppSys-inVi"
+environment  = "appsys-invi-dev"
+
+bucket_name      = ""
+bucket_base_name = "appsys-invi"
+
+enable_ses = true
+
+ses_rule_set_name = "nova-intake-rules"
+ses_rule_name     = "nova-intake-rules"
+ses_recipients    = ["project.tools@intake.appsysglobal.com"]
