@@ -29,6 +29,13 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
+      - name: Cleanup Existing Conflicting Resources
+        run: |
+          aws logs delete-log-group --log-group-name /aws/lambda/email-attachment-parser || true
+          aws logs delete-log-group --log-group-name /aws/lambda/Nova-Extractor-Lambda || true
+          aws logs delete-log-group --log-group-name /aws/lambda/invoice-audit-writer-lamdba || true
+          aws ses delete-receipt-rule-set --rule-set-name nova-intake-rules || true
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
