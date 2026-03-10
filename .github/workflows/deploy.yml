@@ -1,4 +1,4 @@
-name: "Terraform Deploy"
+name: Deploy FinX
 
 on:
   push:
@@ -8,22 +8,26 @@ on:
   pull_request:
 
 permissions:
-  id-token: write # This is required for requesting the JWT
-  contents: read  # This is required for actions/checkout
+  id-token: write
+  contents: read
 
 jobs:
   terraform:
-    name: "Terraform"
+    name: Terraform
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: arn:aws:iam::320042238431:role/GitHub-Role
           aws-region: us-east-1
+
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -34,10 +38,8 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color
+        run: terraform plan
 
-      - name: Terraform Apply
-        # Only apply on pushed branches, not PRs
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/dhanu-appsys-finx-v.1' || github.ref == 'refs/heads/main')
-        run: terraform apply -auto-approve -input=false
+      # Uncomment only when ready to deploy automatically
+      # - name: Terraform Apply
+      #   run: terraform apply -auto-approve
