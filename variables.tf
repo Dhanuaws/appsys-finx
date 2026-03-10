@@ -45,7 +45,24 @@ variable "ses_recipients" {
 
 variable "tables" {
   type    = any
-  default = []
+  default = [
+    {
+      name         = "appsys-invi-nova-intake-emails-table"
+      billing_mode = "PAY_PER_REQUEST"
+      hash_key     = "email_id"
+      attributes = [
+        { name = "email_id", type = "S" }
+      ]
+    },
+    {
+      name         = "appsys-invi-nova-extracted-data-table"
+      billing_mode = "PAY_PER_REQUEST"
+      hash_key     = "extraction_id"
+      attributes = [
+        { name = "extraction_id", type = "S" }
+      ]
+    }
+  ]
 }
 
 variable "bedrock_model_arns" {
