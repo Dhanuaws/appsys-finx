@@ -41,5 +41,5 @@ jobs:
         run: terraform plan
 
       # Uncomment only when ready to deploy automatically
-      # - name: Terraform Apply
-      #   run: terraform apply -auto-approve
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
