@@ -15,7 +15,7 @@ variable "environment" {
 
 variable "enable_ses" {
   type    = bool
-  default = true
+  default = false
 }
 
 variable "bucket_name" {
