@@ -50,17 +50,17 @@ variable "handler_audit_writer" {
 
 variable "zip_email_attachment_parser" {
   type    = string
-  default = "../../artifacts/email-attachment-parser.zip"
+  default = "./artifacts/email-attachment-parser.zip"
 }
 
 variable "zip_nova_extractor" {
   type    = string
-  default = "../../artifacts/Nova-Extractor-Lambda.zip"
+  default = "./artifacts/Nova-Extractor-Lambda.zip"
 }
 
 variable "zip_audit_writer" {
   type    = string
-  default = "../../artifacts/invoice-audit-writer-lamdba.zip"
+  default = "./artifacts/invoice-audit-writer-lamdba.zip"
 }
 
 variable "memory_size" {
