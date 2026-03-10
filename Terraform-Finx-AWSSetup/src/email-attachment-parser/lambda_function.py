@@ -12,8 +12,9 @@ What this version fixes over OLD code:
 ✅ SHA256 check uses KeyCount instead of "Contents" key — more reliable
 ✅ NoSuchKey guard now catches ClientError 404 correctly and returns early — prevents crash on stale S3 events
 ✅ unquote_plus restored for S3 key decoding (handles + in filenames safely)
+✅ Nova prompt updated to correctly classify Purchase Orders as non-invoices
 
-Last corrected: 2026-02-26
+Last corrected: 2026-03-10
 """
 
 import json
@@ -253,24 +254,43 @@ def extract_invoice_data_with_nova(attachment_bytes: bytes, ext: str) -> dict:
     Uses Bedrock Converse API (correct format for Nova multimodal).
     Fixes: ValidationException 'extraneous key [document] not permitted'
     that occurred when using invoke_model() with the old body format.
+
+    ✅ UPDATED PROMPT: Now correctly distinguishes Purchase Orders from Invoices.
+    Purchase Orders share visual characteristics with invoices (line items, totals,
+    vendor info) but are buyer-authorizing documents — NOT seller billing documents.
+    The old prompt never mentioned POs, forcing Nova to misclassify them as invoices.
     """
     doc_format = normalize_doc_format(ext)
 
+    # ✅ UPDATED: Prompt now explicitly teaches Nova the Invoice vs PO distinction
     prompt = (
-        "You are analyzing an invoice document for ERP integration.\n\n"
+        "You are analyzing a financial document for ERP integration.\n\n"
         "Tasks:\n"
-        "1. Determine if this is an official Invoice or Credit Memo\n"
-        "2. If it is an invoice/credit memo, extract:\n"
+        "1. Determine the document type. It could be:\n"
+        "   - Invoice (a SELLER billing a BUYER for goods/services already provided)\n"
+        "   - Credit Memo\n"
+        "   - Purchase Order (a BUYER authorizing a purchase — has P.O. #, 'Ship To', Delivery Date, 'Authorized by')\n"
+        "   - Receipt\n"
+        "   - Other\n\n"
+        "2. Key distinction — a Purchase Order is NOT an invoice:\n"
+        "   If the document contains any of these signals, classify as 'Purchase Order':\n"
+        "   - The words 'Purchase Order' or 'P.O. #' anywhere on the document\n"
+        "   - A separate Delivery Date field (distinct from the document date)\n"
+        "   - An 'Authorized by' signature line\n"
+        "   - 'Ship To' and 'Vendor' as two separate address blocks\n"
+        "   - 'Shipping Terms' or 'Shipping Method' fields\n\n"
+        "3. If it is a confirmed Invoice or Credit Memo, extract:\n"
         "   - Invoice Number\n"
         "   - Vendor/Supplier Name\n\n"
         "Return ONLY strict JSON:\n"
         "{\n"
         "  \"is_invoice\": boolean,\n"
-        "  \"type\": \"Invoice\" | \"Credit Memo\" | \"Other\",\n"
+        "  \"type\": \"Invoice\" | \"Credit Memo\" | \"Purchase Order\" | \"Receipt\" | \"Other\",\n"
         "  \"invoice_number\": string | null,\n"
         "  \"vendor_name\": string | null,\n"
         "  \"confidence\": float\n"
         "}\n"
+        "Set is_invoice=false for Purchase Orders, Receipts, and Other.\n"
         "No markdown. No explanations.\n"
     )
 
