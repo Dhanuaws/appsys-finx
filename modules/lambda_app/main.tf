@@ -98,6 +98,11 @@ data "aws_iam_policy_document" "audit_writer_inline" {
     actions   = ["dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:GetItem"]
     resources = values(var.dynamodb_table_arns)
   }
+
+  statement {
+    actions   = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
+    resources = [var.audit_queue_arn]
+  }
 }
 
 resource "aws_iam_role_policy" "audit_writer_inline" {
