@@ -176,28 +176,33 @@ def _execute_tool(tool_name: str, tool_input: dict, actor: ActorContext) -> tupl
     citations: list[Citation] = []
 
     if tool_name == "SearchInvoices":
-        filters = InvoiceFilters(
-            status=tool_input.get("status"),
-            vendor_id=tool_input.get("vendor"),
-            date_from=tool_input.get("date_from"),
-            date_to=tool_input.get("date_to"),
-            ingestion_date_from=tool_input.get("ingestion_date_from"),
-            ingestion_date_to=tool_input.get("ingestion_date_to"),
-            fraud_score_min=tool_input.get("fraud_score_min"),
-            amount_min=tool_input.get("amount_min"),
-            amount_max=tool_input.get("amount_max"),
-            exception_codes=tool_input.get("exception_codes"),
-            page_size=min(int(tool_input.get("limit", 20)), 50),
-        )
-        result = search_invoices(actor, filters)
-        for inv in result.get("items", []):
-            citations.append(Citation(
-                type="invoice",
-                id=inv.get("invoice_id", ""),
-                label=inv.get("invoice_number", inv.get("invoice_id", "")),
-                s3_key=inv.get("s3_location", "")
-            ))
-        return result, citations
+        from pydantic import ValidationError
+        try:
+            filters = InvoiceFilters(
+                status=tool_input.get("status"),
+                vendor_id=tool_input.get("vendor"),
+                date_from=tool_input.get("date_from"),
+                date_to=tool_input.get("date_to"),
+                ingestion_date_from=tool_input.get("ingestion_date_from"),
+                ingestion_date_to=tool_input.get("ingestion_date_to"),
+                fraud_score_min=tool_input.get("fraud_score_min"),
+                amount_min=tool_input.get("amount_min"),
+                amount_max=tool_input.get("amount_max"),
+                exception_codes=tool_input.get("exception_codes"),
+                page_size=min(int(tool_input.get("limit", 20)), 50),
+            )
+            result = search_invoices(actor, filters)
+            for inv in result.get("items", []):
+                citations.append(Citation(
+                    type="invoice",
+                    id=inv.get("invoice_id", ""),
+                    label=inv.get("invoice_number", inv.get("invoice_id", "")),
+                    s3_key=inv.get("s3_location", "")
+                ))
+            return result, citations
+        except ValidationError as e:
+            # If the AI hallucinates an invalid status (e.g. "processing" instead of "SUCCESS")
+            return {"error": f"Invalid filters provided: {str(e)}"}, citations
 
     elif tool_name == "GetInvoice":
         inv = get_invoice(actor, tool_input["invoice_id"])
