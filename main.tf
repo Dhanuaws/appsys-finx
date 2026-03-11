@@ -10,7 +10,7 @@ locals {
 }
 
 module "s3_bucket" {
-  source           = "../appsys-invi-iac-modules/s3_bucket"
+  source           = "./modules/s3_bucket"
   bucket_name      = var.bucket_name
   bucket_base_name = var.bucket_base_name
   aws_account_id   = data.aws_caller_identity.me.account_id
@@ -22,7 +22,7 @@ module "s3_bucket" {
 }
 
 module "audit_queue" {
-  source     = "../appsys-invi-iac-modules/sqs_queue"
+  source     = "./modules/sqs_queue"
   queue_name = "appsys-invi-invoice-audit-events-queue"
   dlq_name   = "appsys-invi-invoice-audit-events-dlq"
   tags       = local.tags
@@ -38,13 +38,13 @@ resource "aws_iam_group_policy_attachment" "admin_group_attach" {
 }
 
 module "dynamodb" {
-  source = "../appsys-invi-iac-modules/dynamodb"
+  source = "./modules/dynamodb"
   tables = var.tables
   tags   = local.tags
 }
 
 module "lambda_app" {
-  source = "../appsys-invi-iac-modules/lambda_app"
+  source = "./modules/lambda_app"
 
   bucket_name         = module.s3_bucket.bucket_name
   audit_queue_url     = module.audit_queue.queue_url
@@ -60,7 +60,7 @@ module "lambda_app" {
 }
 
 module "s3_notifications" {
-  source         = "../appsys-invi-iac-modules/s3_notifications"
+  source         = "./modules/s3_notifications"
   bucket_name    = module.s3_bucket.bucket_name
   aws_account_id = data.aws_caller_identity.me.account_id
 
@@ -75,7 +75,7 @@ module "s3_notifications" {
 }
 
 module "audit_queue_mapping" {
-  source              = "../appsys-invi-iac-modules/sqs_event_mapping"
+  source              = "./modules/sqs_event_mapping"
   event_source_arn    = module.audit_queue.queue_arn
   consumer_lambda_arn = module.lambda_app.audit_writer_arn
 }
@@ -83,7 +83,7 @@ module "audit_queue_mapping" {
 
 module "ses_receiving" {
   count  = var.enable_ses ? 1 : 0
-  source = "../appsys-invi-iac-modules/ses_receiving"
+  source = "./modules/ses_receiving"
 
   rule_set_name = var.ses_rule_set_name
   rule_name     = var.ses_rule_name
@@ -189,7 +189,7 @@ resource "aws_cognito_user_pool_client" "finx_frontend" {
 # ── Chatbot API — App Runner ───────────────────────────────────
 module "chatbot_api" {
   count  = var.enable_chatbot ? 1 : 0
-  source = "../appsys-invi-iac-modules/chatbot_api"
+  source = "./modules/chatbot_api"
 
   service_name        = "finx-chatbot-api"
   ecr_repository_name = "finx-chatbot-api"
@@ -249,7 +249,7 @@ output "cognito_app_client_id" {
 # + SNS email alerts (1,000 emails/month free)
 module "observability" {
   count  = var.enable_observability ? 1 : 0
-  source = "../appsys-invi-iac-modules/observability"
+  source = "./modules/observability"
 
   alert_email        = var.alert_email
   log_retention_days = 30
