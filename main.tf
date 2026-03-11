@@ -52,6 +52,11 @@ module "lambda_app" {
   dynamodb_table_arns = module.dynamodb.table_arns
   bedrock_model_arns  = var.bedrock_model_arns
 
+  # Zip paths — point to committed artifacts in the repo
+  zip_email_attachment_parser = ".lambda_artifacts/appsys-invi-iac/artifacts/email-attachment-parser.zip"
+  zip_nova_extractor          = ".lambda_artifacts/appsys-invi-iac/artifacts/Nova-Extractor-Lambda.zip"
+  zip_audit_writer            = ".lambda_artifacts/appsys-invi-iac/artifacts/invoice-audit-writer-lamdba.zip"
+
   extra_env_email_parser   = var.extra_env_email_parser
   extra_env_nova_extractor = var.extra_env_nova_extractor
   extra_env_audit_writer   = var.extra_env_audit_writer

@@ -12,7 +12,7 @@ variable "message_retention_seconds" {
 
 variable "max_message_size" {
   type    = number
-  default = 1048576
+  default = 262144
 }
 
 variable "delay_seconds" {
