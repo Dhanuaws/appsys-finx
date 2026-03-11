@@ -164,13 +164,13 @@ variable "extra_env_audit_writer" {
 variable "enable_cognito" {
   description = "Set to true to provision the Cognito User Pool for FinX auth"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "enable_chatbot" {
   description = "Set to true to provision ECR + App Runner for the chatbot backend"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "chatbot_image_tag" {
