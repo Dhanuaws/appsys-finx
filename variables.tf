@@ -15,7 +15,7 @@ variable "environment" {
 
 variable "enable_ses" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "bucket_name" {
@@ -41,7 +41,7 @@ variable "ses_rule_name" {
 
 variable "ses_recipients" {
   type    = list(string)
-  default = ["project.tools@intake.appsysglobal.com"]
+  default = ["intake-dev.appsysglobal.com"]
 }
 
 variable "tables" {
