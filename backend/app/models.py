@@ -148,6 +148,8 @@ class Citation(BaseModel):
 class InvoiceFilters(BaseModel):
     date_from: Optional[str] = None
     date_to: Optional[str] = None
+    ingestion_date_from: Optional[str] = None
+    ingestion_date_to: Optional[str] = None
     status: Optional[list[Literal["RAW", "DUPLICATE", "SUCCESS", "FORGED"]]] = None
     vendor_id: Optional[str] = None
     entity_id: Optional[str] = None

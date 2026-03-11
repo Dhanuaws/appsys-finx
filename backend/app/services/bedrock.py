@@ -38,8 +38,11 @@ RULES — NEVER BREAK THESE:
 8. If canViewEmails=false, say: "Email evidence access is restricted for your account."
 
 AVAILABLE TOOLS:
-- SearchInvoices: Search and filter invoices by status, vendor, date, amount, fraud score
-- GetInvoice: Get full details for a specific invoice by ID
+-        SearchInvoices:
+        - Use `date_from`/`date_to` ONLY when the user asks for invoices "dated" in a certain period (this refers to the date printed on the paper invoice).
+        - Use `ingestion_date_from`/`ingestion_date_to` when the user asks for "today's invoices", "recent invoices", "duplicate invoices", or invoices "uploaded/processed" today (this refers to when the system received the document).
+
+        GetInvoice: Fetch full details using the invoice ID.
 - ListForgedInvoices: Get invoices with high fraud scores and suspicious signals
 - GetEmailEvidence: Get email evidence (sender, subject, body, attachments) for an invoice
 - GetSignedUrl: Get a download link for an email attachment (RBAC gated)
@@ -62,12 +65,18 @@ _TOOLS = [
                 "json": {
                     "type": "object",
                     "properties": {
-                        "status": {"type": "array", "items": {"type": "string", "enum": ["RAW", "DUPLICATE", "SUCCESS", "FORGED"]}, "description": "Invoice status filter"},
-                        "vendor": {"type": "string", "description": "Filter by vendor name or ID (partial match)"},
-                        "date_from": {"type": "string", "description": "Start date ISO8601 YYYY-MM-DD"},
-                        "date_to": {"type": "string", "description": "End date ISO8601 YYYY-MM-DD"},
-                        "fraud_score_min": {"type": "number", "description": "Minimum fraud score 0-100"},
-                        "amount_min": {"type": "number", "description": "Minimum invoice amount"},
+                        "status": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Statuses to include (e.g. SUCCESS, DUPLICATE, FORGED)",
+                        },
+                        "vendor_id": {"type": "string"},
+                        "date_from": {"type": "string", "description": "YYYY-MM-DD (Date printed on the invoice document)"},
+                        "date_to": {"type": "string", "description": "YYYY-MM-DD"},
+                        "ingestion_date_from": {"type": "string", "description": "ISO8601 YYYY-MM-DDTHH:mm:ssZ (Date the system received the invoice, use for 'today's invoices')"},
+                        "ingestion_date_to": {"type": "string", "description": "ISO8601 YYYY-MM-DDTHH:mm:ssZ"},
+                        "fraud_score_min": {"type": "number"},
+                        "amount_min": {"type": "number"},
                         "amount_max": {"type": "number", "description": "Maximum invoice amount"},
                         "exception_codes": {"type": "array", "items": {"type": "string"}, "description": "Filter by exception codes"},
                         "limit": {"type": "integer", "default": 20, "description": "Max results to return"},
@@ -167,6 +176,8 @@ def _execute_tool(tool_name: str, tool_input: dict, actor: ActorContext) -> tupl
             vendor_id=tool_input.get("vendor"),
             date_from=tool_input.get("date_from"),
             date_to=tool_input.get("date_to"),
+            ingestion_date_from=tool_input.get("ingestion_date_from"),
+            ingestion_date_to=tool_input.get("ingestion_date_to"),
             fraud_score_min=tool_input.get("fraud_score_min"),
             amount_min=tool_input.get("amount_min"),
             amount_max=tool_input.get("amount_max"),
