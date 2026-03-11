@@ -81,10 +81,10 @@ def search_invoices(
         filter_expr = filter_expr & Attr("InvoiceDate").lte(filters.date_to)
 
     if filters.ingestion_date_from:
-        filter_expr = filter_expr & Attr("processedAt").gte(filters.ingestion_date_from)
+        filter_expr = filter_expr & Attr("ProcessedAt").gte(filters.ingestion_date_from)
 
     if filters.ingestion_date_to:
-        filter_expr = filter_expr & Attr("processedAt").lte(filters.ingestion_date_to)
+        filter_expr = filter_expr & Attr("ProcessedAt").lte(filters.ingestion_date_to)
 
     # Use a scan with filter (acceptable at small scale) or GSI if available
     # In production, replace with GSI query on status+date for best performance

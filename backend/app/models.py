@@ -76,7 +76,7 @@ class Invoice(BaseModel):
             fraud_reasons=item.get("fraudReasons", []),
             document_ref=item.get("documentRef"),
             linked_email_ids=item.get("linkedEmailIds", []),
-            processed_at=item.get("processedAt", ""),
+            processed_at=item.get("ProcessedAt", item.get("processedAt", "")),
             s3_location=item.get("s3Location"),
             tenant_id=item.get("tenantId", ""),
         )
