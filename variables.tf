@@ -19,13 +19,14 @@ variable "enable_ses" {
 }
 
 variable "bucket_name" {
-  type    = string
-  default = "amzn-s3-nova-bucket"
+  description = "Leave empty to auto-generate a unique name using bucket_base_name + random suffix"
+  type        = string
+  default     = ""  # Dev account: auto-generated to avoid global name collision
 }
 
 variable "bucket_base_name" {
   type    = string
-  default = "appsys-invi"
+  default = "appsys-finx-dev"
 }
 
 variable "ses_rule_set_name" {
