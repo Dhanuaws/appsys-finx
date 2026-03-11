@@ -40,8 +40,13 @@ def search_invoices(
     db = _get_resource()
     table = db.Table(settings.table_invoices)
 
-    # Build filter expression — always scope to tenantId
-    filter_expr = Attr("tenantId").eq(actor.tenant_id)
+    # Build filter expression
+    if actor.role == "ADMIN":
+        # Super Admin: see everything
+        filter_expr = Attr("DocumentHash").exists() 
+    else:
+        # Standard: scope to tenantId
+        filter_expr = Attr("tenantId").eq(actor.tenant_id)
 
     if filters.status:
         status_filter = None
@@ -132,8 +137,8 @@ def get_invoice(actor: ActorContext, invoice_id: str) -> Optional[Invoice]:
     if not item:
         return None
 
-    # Tenant isolation — hard check
-    if item.get("tenantId", "") != actor.tenant_id:
+    # Tenant isolation — skip check for ADMIN role
+    if actor.role != "ADMIN" and item.get("tenantId", "") != actor.tenant_id:
         log.warning(
             "Tenant isolation violation attempt: actor=%s requested invoice=%s (tenant=%s)",
             actor.tenant_id, invoice_id, item.get("tenantId"),

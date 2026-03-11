@@ -255,7 +255,13 @@ async def stream_chat(
     settings = get_settings()
     bedrock = _get_bedrock()
 
+    from datetime import datetime
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    
     system_prompt = _SYSTEM_PROMPT
+    system_prompt += f"\n\nUSER_CONTEXT: Role={actor.role}, canViewEmails={actor.can_view_emails}, tenantId={actor.tenant_id}"
+    system_prompt += f"\n\nCURRENT_DATE: {current_date}"
+    
     if audit_mode:
         system_prompt += "\n\nAUDIT MODE: Provide detailed citations for every claim. Include confidence level (High/Medium/Low) for each statement."
 
@@ -286,7 +292,9 @@ async def stream_chat(
 
         stream = response.get("stream", [])
 
-        accumulated_text = ""
+        full_chunk_for_history = ""
+        temp_buffer = ""
+        in_thinking_block = False
         tool_use_blocks: list[dict] = []
         current_tool: dict | None = None
         stop_reason = "end_turn"
@@ -307,8 +315,68 @@ async def stream_chat(
 
                 if "text" in delta:
                     chunk = delta["text"]
-                    accumulated_text += chunk
-                    yield {"type": "chunk", "text": chunk}
+                    full_chunk_for_history += chunk
+                    
+                    # ── Thinking Tag Filter ──
+                    # Simple stateful filter to strip <thinking>...</thinking>
+                    # and also clean up <response>...</response> if present
+                    # This handles chunks even if they are split at tag boundaries.
+                    
+                    temp_buffer += chunk
+                    
+                    while True:
+                        if not in_thinking_block:
+                            # Look for start of thinking tag
+                            start_idx = temp_buffer.find("<thinking>")
+                            if start_idx != -1:
+                                # Yield everything before the tag
+                                text_to_yield = temp_buffer[:start_idx]
+                                if text_to_yield:
+                                    # Still might have <response> tags to strip
+                                    text_to_yield = text_to_yield.replace("<response>", "").replace("</response>", "")
+                                    yield {"type": "chunk", "text": text_to_yield}
+                                
+                                # Enter thinking mode
+                                in_thinking_block = True
+                                temp_buffer = temp_buffer[start_idx + len("<thinking>"):]
+                                continue
+                            else:
+                                # No start tag found, but check for partial "<thinking"
+                                # to avoid yielding it if it's about to be completed
+                                if "<thinking" in temp_buffer:
+                                    break # Wait for more data
+                                
+                                # Yield what we have (cleaning response tags)
+                                text_to_yield = temp_buffer
+                                if text_to_yield:
+                                    text_to_yield = text_to_yield.replace("<response>", "").replace("</response>", "")
+                                    yield {"type": "chunk", "text": text_to_yield}
+                                temp_buffer = ""
+                                break
+                        else:
+                            # We are inside a thinking block, look for end
+                            end_idx = temp_buffer.find("</thinking>")
+                            if end_idx != -1:
+                                in_thinking_block = False
+                                temp_buffer = temp_buffer[end_idx + len("</thinking>"):]
+                                continue
+                            else:
+                                # Still thinking... discard buffer 
+                                # but KEEP any potential partial end-tag at the very end
+                                partial_tag = "</thinking"
+                                found_partial = False
+                                for i in range(len(partial_tag), 0, -1):
+                                    if temp_buffer.endswith(partial_tag[:i]):
+                                        temp_buffer = partial_tag[:i]
+                                        found_partial = True
+                                        break
+                                if not found_partial:
+                                    temp_buffer = ""
+                                break
+                    
+                    # If this is the absolute last chunk, we need to flush any safe text left in the buffer
+                    # However, we evaluate this chunk by chunk, so we yield safe buffer parts immediately
+                    # inside the loop. The temp_buffer here holds fragments that MIGHT be tags explicitly.
 
                 elif "toolUse" in delta and current_tool:
                     current_tool["input_text"] += delta["toolUse"].get("input", "")
@@ -324,11 +392,19 @@ async def stream_chat(
 
             elif "messageStop" in event:
                 stop_reason = event["messageStop"].get("stopReason", "end_turn")
+                
+                # Stream closing: flush whatever valid text is left in the buffer
+                if temp_buffer and not in_thinking_block:
+                    if temp_buffer != "<": # don't yield a lone dangling bracket
+                        text_to_yield = temp_buffer.replace("<response>", "").replace("</response>", "")
+                        if text_to_yield:
+                            yield {"type": "chunk", "text": text_to_yield}
+                temp_buffer = ""
 
         # Build assistant message for history
         assistant_content = []
-        if accumulated_text:
-            assistant_content.append({"text": accumulated_text})
+        if full_chunk_for_history:
+            assistant_content.append({"text": full_chunk_for_history})
         for tb in tool_use_blocks:
             assistant_content.append({"toolUse": {"toolUseId": tb["toolUseId"], "name": tb["name"], "input": tb["input"]}})
 

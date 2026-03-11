@@ -133,6 +133,7 @@ variable "extra_env_email_parser" {
     DYNAMODB_TABLE = "RawEmailMetaData"
     APP_NAME       = "AppSys-inVi"
     ENV            = "dev"
+    TENANT_ID      = "tenant-appsys-dev"
   }
 }
 
@@ -147,6 +148,7 @@ variable "extra_env_nova_extractor" {
     ENABLE_SCAN_FALLBACK = "false"
     APP_NAME         = "AppSys-inVi"
     ENV              = "dev"
+    TENANT_ID        = "tenant-appsys-dev"
   }
 }
 
