@@ -35,17 +35,17 @@ variable "fn_audit_writer" {
 
 variable "handler_email_attachment_parser" {
   type    = string
-  default = "lambda_function.lambda_handler"
+  default = "src.lambda_function.lambda_handler"
 }
 
 variable "handler_nova_extractor" {
   type    = string
-  default = "lambda_nova_extractor_trigger.lambda_handler"
+  default = "src.lambda_nova_extractor_trigger.lambda_handler"
 }
 
 variable "handler_audit_writer" {
   type    = string
-  default = "lambda_function.lambda_handler"
+  default = "src.lambda_function.lambda_handler"
 }
 
 variable "zip_email_attachment_parser" {
