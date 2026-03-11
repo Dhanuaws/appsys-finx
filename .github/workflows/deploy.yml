@@ -68,14 +68,15 @@ jobs:
         terraform_version: ${{ env.TF_VERSION }}
 
     - name: Download Lambda artifacts from S3
+      env:
+        TF_STATE_BUCKET: appsys-invi-terraform-state
       run: |
         mkdir -p .lambda_artifacts/appsys-invi-iac/artifacts
-        # Lambda zips are stored in the state bucket under lambda-artifacts/
-        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/email-attachment-parser.zip \
+        aws s3 cp s3://${TF_STATE_BUCKET}/lambda-artifacts/email-attachment-parser.zip \
           .lambda_artifacts/appsys-invi-iac/artifacts/email-attachment-parser.zip
-        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/Nova-Extractor-Lambda.zip \
+        aws s3 cp s3://${TF_STATE_BUCKET}/lambda-artifacts/Nova-Extractor-Lambda.zip \
           .lambda_artifacts/appsys-invi-iac/artifacts/Nova-Extractor-Lambda.zip
-        aws s3 cp s3://${{ secrets.TF_STATE_BUCKET }}/lambda-artifacts/invoice-audit-writer-lamdba.zip \
+        aws s3 cp s3://${TF_STATE_BUCKET}/lambda-artifacts/invoice-audit-writer-lamdba.zip \
           .lambda_artifacts/appsys-invi-iac/artifacts/invoice-audit-writer-lamdba.zip
         echo "✅ Lambda artifacts downloaded"
         ls -lh .lambda_artifacts/appsys-invi-iac/artifacts/
@@ -84,7 +85,7 @@ jobs:
       id: init
       run: |
         terraform init \
-          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+          -backend-config="bucket=appsys-invi-terraform-state" \
           -backend-config="key=dev/terraform.tfstate" \
           -backend-config="region=${{ env.AWS_REGION }}" \
           -backend-config="encrypt=true"
