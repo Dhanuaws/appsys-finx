@@ -104,6 +104,8 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
 }
 
 
+import React from "react";
+
 // ── Streaming text with cursor ────────────────────────────────
 function MessageContent({
     content,
@@ -112,10 +114,67 @@ function MessageContent({
     content: string;
     isStreaming?: boolean;
 }) {
+    // Simple inline Markdown Table Parser
+    const lines = content.split('\n');
+    const elements: React.ReactNode[] = [];
+    let tableLines: string[] = [];
+    let inTable = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+            inTable = true;
+            tableLines.push(line);
+        } else {
+            if (inTable) {
+                elements.push(<MarkdownTable key={`table-${i}`} lines={tableLines} />);
+                tableLines = [];
+                inTable = false;
+            }
+            elements.push(<span key={i}>{line}<br /></span>);
+        }
+    }
+
+    if (inTable) {
+        elements.push(<MarkdownTable key={`table-end`} lines={tableLines} />);
+    }
+
     return (
         <span className={cn("whitespace-pre-wrap", isStreaming && "typing-cursor")}>
-            {content}
+            {elements}
         </span>
+    );
+}
+
+function MarkdownTable({ lines }: { lines: string[] }) {
+    if (lines.length < 2) return <pre>{lines.join('\n')}</pre>;
+
+    const headers = lines[0].split('|').map(s => s.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
+    const bodyRows = lines.slice(2).map(row =>
+        row.split('|').map(s => s.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+    );
+
+    return (
+        <div className="overflow-x-auto my-3 w-full">
+            <table className="min-w-full divide-y divide-indigo-500/20 border border-indigo-500/20 rounded-lg overflow-hidden text-sm">
+                <thead className="bg-indigo-500/10">
+                    <tr>
+                        {headers.map((h, i) => (
+                            <th key={i} className="px-3 py-2 text-left font-semibold text-indigo-300 uppercase tracking-wider">{h}</th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-indigo-500/10">
+                    {bodyRows.map((row, rIdx) => (
+                        <tr key={rIdx} className="hover:bg-white/5 transition-colors">
+                            {row.map((cell, cIdx) => (
+                                <td key={cIdx} className="px-3 py-2 text-slate-300 whitespace-nowrap">{cell}</td>
+                            ))}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 }
 
