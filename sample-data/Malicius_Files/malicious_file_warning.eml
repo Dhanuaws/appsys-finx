@@ -1,0 +1,20 @@
+MIME-Version: 1.0
+Date: Wed, 11 Mar 2026 14:30:00 +0000
+Message-ID: <malicious-test@appsysglobal.com>
+Subject: You have won a price! See attachment.
+From: phishing@malicious-test-site.com
+To: user@intake-dev.appsysglobal.com
+Content-Type: multipart/mixed; boundary="0000000000000000000000000004"
+
+--0000000000000000000000000004
+Content-Type: text/plain; charset="UTF-8"
+
+Please open the attached file to claim your price.
+
+--0000000000000000000000000004
+Content-Type: text/plain; name="prize_claim.exe.txt"
+Content-Disposition: attachment; filename="prize_claim.exe.txt"
+
+This is a test file for extension rejection testing.
+It is a .txt file so the system should drop it.
+--0000000000000000000000000004--

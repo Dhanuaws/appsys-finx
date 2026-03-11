@@ -1,0 +1,35 @@
+MIME-Version: 1.0
+Date: Wed, 11 Mar 2026 12:00:00 +0000
+Message-ID: <test-invoice-001@example.com>
+Subject: Fwd: Invoice IN-5555 from Vendor Corp
+From: Sender <sender@example.com>
+To: project.tools@intake.appsysglobal.com
+Content-Type: multipart/mixed; boundary="0000000000000000000000000000"
+
+--0000000000000000000000000000
+Content-Type: text/plain; charset="UTF-8"
+
+Please process this attached invoice.
+
+Thanks,
+Sender
+
+--0000000000000000000000000000
+Content-Type: application/pdf; name="VendorCorp_Invoice_IN-5555.pdf"
+Content-Disposition: attachment; filename="VendorCorp_Invoice_IN-5555.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwog
+IC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAv
+TWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0K
+Pj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAg
+L1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSCgkgID4+CiAgPj4K
+ICAvQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCgo0IDAgb2JqCjw8CiAgL1R5cGUgL0ZvbnQK
+ICAvU3VidHlwZSAvVHlwZTEKICAvQmFzZUZvbnQgL1RpbWVzLVJvbWFuCj4+CmVuZG9iagoK
+NSAwIG9iago8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBU
+ZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAw
+MDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAg
+biAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAg
+MDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhy
+ZWYKNDkyCiUlRU9GCg==
+--0000000000000000000000000000--

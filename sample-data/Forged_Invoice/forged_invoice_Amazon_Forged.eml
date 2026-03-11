@@ -1,0 +1,33 @@
+MIME-Version: 1.0
+Date: Wed, 11 Mar 2026 14:10:00 +0000
+Message-ID: <forged-invoice-9999@suspicious-provider.com>
+Subject: URGENT: Updated Invoice for Amazon AWS Services
+From: account-update@amaz0n-support.com
+To: accounts-payable@intake-dev.appsysglobal.com
+Content-Type: multipart/mixed; boundary="0000000000000000000000000002"
+
+--0000000000000000000000000002
+Content-Type: text/plain; charset="UTF-8"
+
+URGENT: Please use this updated invoice for our AWS hosting fees. Note the new bank account details.
+
+--0000000000000000000000000002
+Content-Type: application/pdf; name="AWS_Invoice_Updated.pdf"
+Content-Disposition: attachment; filename="AWS_Invoice_Updated.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwog
+IC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAv
+TWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0K
+Pj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAg
+L1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSCgkgID4+CiAgPj4K
+ICAvQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCgo0IDAgb2JqCjw8CiAgL1R5cGUgL0ZvbnQK
+ICAvU3VidHlwZSAvVHlwZTEKICAvQmFzZUZvbnQgL1RpbWVzLVJvbWFuCj4+CmVuZG9iagoK
+NSAwIG9iago8PAogIC9MZW5ndGggODAKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBU
+ZgooQU1BWk9OIFNQU0UgSU5WT0lDRSkgVGoKMCAtMjAgV0QKL0YxIDEyIFRmCihORVcgQkFO
+SyBBQ0NPVU5UOiA5OTk5OTk5KSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNgow
+MDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTAgMDAwMDAgbiAKMDAwMDAwMDA3OSAwMDAw
+MCBuIAowMDAwMDAwMTczIDAwMDAwIG4gCjAwMDAwMDAzMDEgMDAwMDAgbiAKMDAwMDAwMDM4
+MCAwMDAwMCBuIAp0cmFpbGVyCjw8CiAgL1NpemUgNgogIC9Sb290IDEgMCBSCj4+CnN0YXJ0
+eHJlZgo1MjgKJSVFT0YK
+--0000000000000000000000000002--

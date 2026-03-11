@@ -1,0 +1,73 @@
+name: Upload Sample Data
+
+on:
+  push:
+    paths:
+      - 'sample-data/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  upload-data:
+    name: "Upload Sample Invoices to S3"
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::320042238431:role/GitHub-Role"
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Terraform Init
+        run: |
+          terraform init \
+            -backend-config="bucket=appsys-finx-dev-terraform-state" \
+            -backend-config="key=dev/terraform.tfstate" \
+            -backend-config="region=us-east-1"
+            
+      - name: Extract S3 Bucket & Upload
+        run: |
+          echo "Extracting S3 Bucket name from Terraform state..."
+          
+          # Use terraform show to parse the state JSON and extract the dynamically created S3 bucket
+          export BUCKET_NAME=$(terraform show -json | jq -r '.values.root_module.child_modules[] | select(.address=="module.s3_bucket") | .resources[] | select(.type=="aws_s3_bucket" and .name=="this") | .values.bucket' | head -n 1)
+          
+          if [ -z "$BUCKET_NAME" ] || [ "$BUCKET_NAME" == "null" ]; then
+            echo "❌ Failed to find the S3 bucket in the Terraform state."
+            exit 1
+          fi
+          
+          echo "✅ Found Target S3 Bucket: $BUCKET_NAME"
+          echo "Starting upload sequence..."
+          
+          # The architecture expects raw emails in 'raw-emails/' and extracted PDFs in 'email-attachment/'
+          # Since the sample data contains both, we'll route them accordingly:
+          
+          # 1. Upload .eml files to trigger the SES parser
+          echo "Uploading raw .eml files..."
+          find sample-data -name "*.eml" | while read -r file; do
+             echo " -> Uploading $file"
+             aws s3 cp "$file" "s3://$BUCKET_NAME/raw-emails/$(basename "$file")"
+          done
+          
+          # 2. Upload PDFs/Images directly to trigger the Nova Extractor
+          echo "Uploading PDFs and Images..."
+          find sample-data -type f -not -name "*.eml" -not -name ".DS_Store" | while read -r file; do
+             echo " -> Uploading $file"
+             aws s3 cp "$file" "s3://$BUCKET_NAME/email-attachment/$(basename "$file")"
+          done
+          
+          echo "🎉 All sample invoices successfully pushed to the FinX ingestion pipeline!"
