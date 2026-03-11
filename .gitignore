@@ -12,8 +12,11 @@ tfplan.out
 **/.env.*.local
 backend/.env
 
-# Lambda artifacts (large zips — uploaded separately in CI)
+# Lambda artifacts — only the 3 built zips committed for Dev CI/CD self-bootstrap
 .lambda_artifacts/
+!.lambda_artifacts/appsys-invi-iac/artifacts/email-attachment-parser.zip
+!.lambda_artifacts/appsys-invi-iac/artifacts/Nova-Extractor-Lambda.zip
+!.lambda_artifacts/appsys-invi-iac/artifacts/invoice-audit-writer-lamdba.zip
 
 # Next.js build output
 frontend/.next/
