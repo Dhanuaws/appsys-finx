@@ -11,6 +11,24 @@ on:
     paths-ignore:
       - 'frontend/**'
       - 'backend/**'
+  workflow_dispatch:
+    inputs:
+      plan_only:
+        description: 'Run terraform plan only (dry run — no apply)'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      enable_cognito:
+        description: 'Enable Cognito (overrides repo var)'
+        required: false
+        default: ''
+      enable_chatbot:
+        description: 'Enable App Runner chatbot (overrides repo var)'
+        required: false
+        default: ''
 
 permissions:
   id-token: write
@@ -29,9 +47,10 @@ jobs:
       TF_VERSION: "1.9.0"
       # ── Chatbot feature flags ──
       # These are off by default; enable manually or via repo vars once ready
-      TF_VAR_enable_cognito: ${{ vars.ENABLE_COGNITO || 'false' }}
-      TF_VAR_enable_chatbot: ${{ vars.ENABLE_CHATBOT || 'false' }}
+      TF_VAR_enable_cognito: ${{ github.event.inputs.enable_cognito || vars.ENABLE_COGNITO || 'false' }}
+      TF_VAR_enable_chatbot: ${{ github.event.inputs.enable_chatbot || vars.ENABLE_CHATBOT || 'false' }}
       TF_VAR_chatbot_image_tag: ${{ vars.CHATBOT_IMAGE_TAG || 'latest' }}
+      PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
 
     steps:
     - name: Checkout Code
@@ -124,8 +143,20 @@ jobs:
       run: exit 1
 
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      if: |
+        (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.plan_only == 'false')
       run: terraform apply -auto-approve
+
+    - name: Terraform Plan (dry-run mode)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.plan_only != 'false'
+      run: |
+        echo "### 🔍 DRY RUN — Terraform Plan Only" >> $GITHUB_STEP_SUMMARY
+        terraform plan -no-color -detailed-exitcode 2>&1 | tee tf_plan_output.txt || true
+        echo "\`\`\`terraform" >> $GITHUB_STEP_SUMMARY
+        cat tf_plan_output.txt >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Plan complete — no changes applied."
 
     - name: Summary
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
