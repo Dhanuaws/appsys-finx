@@ -321,6 +321,7 @@ async def stream_chat(
 
         full_chunk_for_history = ""
         temp_buffer = ""
+        last_yielded_char = ""
         in_thinking_block = False
         tool_use_blocks: list[dict] = []
         current_tool: dict | None = None
@@ -363,7 +364,16 @@ async def stream_chat(
                                     # Strip <response> tags robustly
                                     text_to_yield = re.sub(r'</?response>', '', text_to_yield)
                                     if text_to_yield:
-                                        yield {"type": "chunk", "text": text_to_yield}
+                                        # Squash consecutive newlines across chunk boundaries
+                                        cleaned = ""
+                                        for char in text_to_yield:
+                                            if char == "\n" and last_yielded_char == "\n":
+                                                continue
+                                            cleaned += char
+                                            last_yielded_char = char
+                                        
+                                        if cleaned:
+                                            yield {"type": "chunk", "text": cleaned}
                                 
                                 # Enter thinking mode
                                 in_thinking_block = True
@@ -379,7 +389,16 @@ async def stream_chat(
                                 if text_to_yield:
                                     text_to_yield = re.sub(r'</?response>', '', text_to_yield)
                                     if text_to_yield:
-                                        yield {"type": "chunk", "text": text_to_yield}
+                                        # Squash consecutive newlines across chunk boundaries
+                                        cleaned = ""
+                                        for char in text_to_yield:
+                                            if char == "\n" and last_yielded_char == "\n":
+                                                continue
+                                            cleaned += char
+                                            last_yielded_char = char
+                                        
+                                        if cleaned:
+                                            yield {"type": "chunk", "text": cleaned}
                                 temp_buffer = ""
                                 break
                         else:
@@ -427,7 +446,16 @@ async def stream_chat(
                     if temp_buffer != "<": # don't yield a lone dangling bracket
                         text_to_yield = re.sub(r'</?response>', '', temp_buffer)
                         if text_to_yield:
-                            yield {"type": "chunk", "text": text_to_yield}
+                            # Squash consecutive newlines across chunk boundaries
+                            cleaned = ""
+                            for char in text_to_yield:
+                                if char == "\n" and last_yielded_char == "\n":
+                                    continue
+                                cleaned += char
+                                last_yielded_char = char
+                            
+                            if cleaned:
+                                yield {"type": "chunk", "text": cleaned}
                 temp_buffer = ""
 
         # Build assistant message for history
