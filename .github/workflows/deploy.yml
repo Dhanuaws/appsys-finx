@@ -24,7 +24,7 @@ jobs:
     environment: dev
 
     env:
-      AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHubActions_TerraformRole"
+      AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHub-Role"
       AWS_REGION: "us-east-1"
       TF_VERSION: "1.9.0"
       # ── Chatbot feature flags ──

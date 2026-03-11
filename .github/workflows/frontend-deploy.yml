@@ -17,7 +17,7 @@ permissions:
 
 env:
   AWS_REGION: "us-east-1"
-  AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHubActions_TerraformRole"
+  AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHub-Role"
   NODE_VERSION: "24"
 
 jobs:
