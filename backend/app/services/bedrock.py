@@ -317,7 +317,8 @@ async def stream_chat(
                     chunk = delta["text"]
                     full_chunk_for_history += chunk
                     
-                    # ── Thinking Tag Filter ──
+                    # ── Thinking & Response Tag Filter ──
+                    import re
                     # Simple stateful filter to strip <thinking>...</thinking>
                     # and also clean up <response>...</response> if present
                     # This handles chunks even if they are split at tag boundaries.
@@ -332,25 +333,26 @@ async def stream_chat(
                                 # Yield everything before the tag
                                 text_to_yield = temp_buffer[:start_idx]
                                 if text_to_yield:
-                                    # Still might have <response> tags to strip
-                                    text_to_yield = text_to_yield.replace("<response>", "").replace("</response>", "")
-                                    yield {"type": "chunk", "text": text_to_yield}
+                                    # Strip <response> tags robustly
+                                    text_to_yield = re.sub(r'</?response>', '', text_to_yield)
+                                    if text_to_yield:
+                                        yield {"type": "chunk", "text": text_to_yield}
                                 
                                 # Enter thinking mode
                                 in_thinking_block = True
                                 temp_buffer = temp_buffer[start_idx + len("<thinking>"):]
                                 continue
                             else:
-                                # No start tag found, but check for partial "<thinking"
-                                # to avoid yielding it if it's about to be completed
-                                if "<thinking" in temp_buffer:
-                                    break # Wait for more data
+                                # No start tag found, but check for partial tags we need to hold
+                                if any(p in temp_buffer for p in ["<thinking", "<think", "<response", "<res", "</response", "</res"]):
+                                    break # Wait for more data to complete the tag
                                 
-                                # Yield what we have (cleaning response tags)
+                                # Yield what we have
                                 text_to_yield = temp_buffer
                                 if text_to_yield:
-                                    text_to_yield = text_to_yield.replace("<response>", "").replace("</response>", "")
-                                    yield {"type": "chunk", "text": text_to_yield}
+                                    text_to_yield = re.sub(r'</?response>', '', text_to_yield)
+                                    if text_to_yield:
+                                        yield {"type": "chunk", "text": text_to_yield}
                                 temp_buffer = ""
                                 break
                         else:
@@ -396,7 +398,7 @@ async def stream_chat(
                 # Stream closing: flush whatever valid text is left in the buffer
                 if temp_buffer and not in_thinking_block:
                     if temp_buffer != "<": # don't yield a lone dangling bracket
-                        text_to_yield = temp_buffer.replace("<response>", "").replace("</response>", "")
+                        text_to_yield = re.sub(r'</?response>', '', temp_buffer)
                         if text_to_yield:
                             yield {"type": "chunk", "text": text_to_yield}
                 temp_buffer = ""
