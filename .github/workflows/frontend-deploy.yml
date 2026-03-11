@@ -51,6 +51,12 @@ jobs:
 
     - name: Update App Runner Service
       run: |
-        aws apprunner update-service \
-          --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${{ env.SERVICE_NAME }}'].ServiceArn" --output text) \
-          --source-configuration "{ \"ImageRepository\": { \"ImageIdentifier\": \"${{ steps.build-image.outputs.image }}\", \"ImageRepositoryType\": \"ECR\" } }"
+        SERVICE_ARN=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${{ env.SERVICE_NAME }}'].ServiceArn" --output text)
+        if [ -n "$SERVICE_ARN" ] && [ "$SERVICE_ARN" != "None" ]; then
+          echo "Updating App Runner service: $SERVICE_ARN"
+          aws apprunner update-service \
+            --service-arn "$SERVICE_ARN" \
+            --source-configuration "{ \"ImageRepository\": { \"ImageIdentifier\": \"${{ steps.build-image.outputs.image }}\", \"ImageRepositoryType\": \"ECR\" } }"
+        else
+          echo "App Runner service '${{ env.SERVICE_NAME }}' not found. This is expected if Terraform hasn't created it yet. Skipping update."
+        fi
