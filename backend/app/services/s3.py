@@ -55,7 +55,56 @@ def generate_signed_url(actor: ActorContext, s3_key: str) -> Optional[str]:
     except ClientError as e:
         log.error("Failed to generate signed URL for %s: %s", s3_key, e)
         return None
+        return None
 
+
+# ── Zip Stream Generator ──────────────────────────────────────
+def generate_zip_stream(actor: ActorContext, s3_keys: list[str]) -> Optional[bytes]:
+    """
+    Download multiple S3 objects and compress them into an in-memory ZIP file.
+    Enforces tenant isolation on all keys.
+    """
+    import io
+    import zipfile
+
+    if not s3_keys:
+        return None
+
+    settings = get_settings()
+    s3 = _get_s3()
+    
+    zip_buffer = io.BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for key in s3_keys:
+            # Scope check: key must start with tenantId prefix
+            if not key.startswith(actor.tenant_id + "/"):
+                log.warning("Zip cross-tenant attempt: actor=%s key=%s", actor.tenant_id, key)
+                continue # Skip invalid keys rather than failing entirely
+
+            try:
+                # Get object from S3
+                response = s3.get_object(Bucket=settings.s3_bucket, Key=key)
+                file_bytes = response["Body"].read()
+                
+                # Extract filename from key for the zip archive
+                filename = key.split("/")[-1]
+                
+                # Add to zip
+                zf.writestr(filename, file_bytes)
+            except ClientError as e:
+                log.error("Failed to fetch %s for zip: %s", key, e)
+                # Continue zipping the rest
+    
+    # Return the bytes of the zip file
+    zip_buffer.seek(0)
+    zip_bytes = zip_buffer.read()
+    
+    # If the zip is essentially empty (no files succeeded), return None
+    if len(zip_bytes) < 100 and b"PK" not in zip_bytes[:2]:
+         return None
+         
+    return zip_bytes
 
 # ── Email Evidence Retrieval ──────────────────────────────────
 def get_email_evidence_for_invoice(

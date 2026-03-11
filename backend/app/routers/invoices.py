@@ -5,13 +5,19 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
+from pydantic import BaseModel
 
 from app.models import ActorContext, InvoiceFilters
 from app.services.rbac import get_actor
 from app.services import dynamodb as db_svc
+from app.services.s3 import generate_zip_stream
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/invoices", tags=["invoices"])
+
+class ZipDownloadRequest(BaseModel):
+    s3_keys: list[str]
 
 
 @router.get("")
@@ -78,3 +84,33 @@ def get_invoice(
     if not invoice:
         raise HTTPException(status_code=404, detail=f"Invoice {invoice_id} not found.")
     return invoice.model_dump()
+
+
+@router.post("/download-zip")
+def download_invoices_zip(
+    request: ZipDownloadRequest,
+    actor: ActorContext = Depends(get_actor)
+):
+    """
+    Download multiple invoices or attachments as a single Zip file.
+    Accepts a list of full S3 keys. Validates tenant access for all keys.
+    """
+    if not request.s3_keys:
+        raise HTTPException(status_code=400, detail="No S3 keys provided.")
+        
+    # Cap bulk download to prevent memory/timeout issues
+    if len(request.s3_keys) > 20: 
+        raise HTTPException(status_code=400, detail="Cannot bulk download more than 20 files at once.")
+
+    zip_bytes = generate_zip_stream(actor, request.s3_keys)
+    
+    if not zip_bytes:
+        raise HTTPException(status_code=404, detail="No files could be downloaded or access was denied.")
+        
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": "attachment; filename=finx_invoices.zip"
+        }
+    )

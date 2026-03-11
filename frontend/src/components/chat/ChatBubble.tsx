@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import { cn, formatDateTime } from "@/lib/utils";
 import { ThinkingDots } from "@/components/ui/invoice-widgets";
-import { Bot, User, FileText, Mail, ExternalLink, AlertCircle } from "lucide-react";
+import { Bot, User, FileText, Mail, ExternalLink, AlertCircle, Download, Archive, Loader2 } from "lucide-react";
 import type { ChatMessage, Citation } from "@/lib/types";
+import { useState } from "react";
 
 // ── Chat Bubble ───────────────────────────────────────────────
 interface ChatBubbleProps {
@@ -75,14 +76,21 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
 
                 {/* Citations */}
                 {message.citations && message.citations.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                        {message.citations.map((c) => (
-                            <CitationBadge
-                                key={c.id}
-                                citation={c}
-                                onClick={() => onCitationClick?.(c)}
-                            />
-                        ))}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap gap-1.5">
+                            {message.citations.map((c) => (
+                                <CitationBadge
+                                    key={c.id}
+                                    citation={c}
+                                    onClick={() => onCitationClick?.(c)}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Download Actions (only if we have s3 keys and it's a finished assistant msg) */}
+                        {!message.isStreaming && !isUser && (
+                            <DownloadActions citations={message.citations} />
+                        )}
                     </div>
                 )}
 
@@ -108,6 +116,98 @@ function MessageContent({
         <span className={cn("whitespace-pre-wrap", isStreaming && "typing-cursor")}>
             {content}
         </span>
+    );
+}
+
+// ── Download Actions ──────────────────────────────────────────
+function DownloadActions({ citations }: { citations: Citation[] }) {
+    const [downloading, setDownloading] = useState<string | null>(null);
+
+    // Extract valid invoice citations with s3 keys
+    const invoices = citations.filter(c => (c.type === "invoice" || c.type === "attachment") && c.s3Key);
+
+    if (invoices.length === 0) return null;
+
+    // Remove duplicates based on s3Key
+    const uniqueInvoices = Array.from(new Map(invoices.map(item => [item.s3Key, item])).values());
+
+    const handleIndividualDownload = async (citation: Citation) => {
+        try {
+            setDownloading(citation.id);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_FINX_API_URL}/evidence/attachment/signed-url?s3_key=${encodeURIComponent(citation.s3Key!)}`);
+            if (!res.ok) throw new Error("Failed to get signed URL");
+            const data = await res.json();
+
+            // Trigger download via hidden anchor
+            const a = document.createElement("a");
+            a.href = data.signed_url;
+            a.download = citation.s3Key!.split("/").pop() || "document.pdf";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Failed to download:", error);
+        } finally {
+            setDownloading(null);
+        }
+    };
+
+    const handleBulkDownload = async () => {
+        try {
+            setDownloading("bulk-zip");
+            const s3Keys = uniqueInvoices.map(c => c.s3Key!);
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_FINX_API_URL}/invoices/download-zip`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ s3_keys: s3Keys })
+            });
+
+            if (!res.ok) throw new Error("Failed to generate zip");
+
+            // Handle blob download
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `finx_invoices_${new Date().toISOString().split("T")[0]}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error("Failed to download zip:", error);
+        } finally {
+            setDownloading(null);
+        }
+    };
+
+    return (
+        <div className="flex flex-wrap gap-2 mt-1">
+            {uniqueInvoices.length > 3 ? (
+                <button
+                    onClick={handleBulkDownload}
+                    disabled={downloading !== null}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md glass text-xs font-medium text-indigo-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {downloading === "bulk-zip" ? <Loader2 size={12} className="animate-spin" /> : <Archive size={12} />}
+                    Download All Invoices (.zip)
+                </button>
+            ) : (
+                uniqueInvoices.map(inv => (
+                    <button
+                        key={inv.id}
+                        onClick={() => handleIndividualDownload(inv)}
+                        disabled={downloading !== null}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md glass text-xs font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={`Download ${inv.label}`}
+                    >
+                        {downloading === inv.id ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+                        {inv.label}
+                    </button>
+                ))
+            )}
+        </div>
     );
 }
 
