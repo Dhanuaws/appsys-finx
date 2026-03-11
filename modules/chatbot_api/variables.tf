@@ -137,6 +137,12 @@ variable "extra_env_vars" {
   default     = {}
 }
 
+variable "dev_mode" {
+  description = "If true, bypass Cognito JWT verification and use mock claims"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   type    = map(string)
   default = {}

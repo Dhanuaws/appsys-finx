@@ -173,6 +173,12 @@ variable "enable_chatbot" {
   default     = true
 }
 
+variable "chatbot_api_dev_mode" {
+  description = "If true, bypasses Cognito JWT auth in the chatbot backend (useful for initial testing)"
+  type        = bool
+  default     = true
+}
+
 variable "enable_chatbot_ui" {
   description = "Set to true to provision ECR + App Runner for the chatbot frontend UI"
   type        = bool

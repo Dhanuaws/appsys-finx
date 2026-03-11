@@ -224,6 +224,7 @@ module "chatbot_api" {
 
   cognito_user_pool_id  = var.enable_cognito ? aws_cognito_user_pool.finx[0].id : var.cognito_user_pool_id
   cognito_app_client_id = var.enable_cognito ? aws_cognito_user_pool_client.finx_frontend[0].id : var.cognito_app_client_id
+  dev_mode              = var.chatbot_api_dev_mode
 
   tags = local.tags
 }

@@ -180,7 +180,7 @@ resource "aws_apprunner_service" "chatbot" {
 
             # App
             APP_NAME = "FinX-Chatbot-Backend"
-            DEV_MODE = "false"
+            DEV_MODE = var.dev_mode ? "true" : "false"
           },
           var.extra_env_vars
         )

@@ -33,6 +33,14 @@ on:
         description: 'Enable App Runner chatbot frontend (overrides repo var)'
         required: false
         default: ''
+      chatbot_api_dev_mode:
+        description: 'Enable Chatbot API Dev Mode (bypass auth)'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 permissions:
   id-token: write
@@ -57,6 +65,7 @@ jobs:
       TF_VAR_enable_chatbot_ui: ${{ github.event.inputs.enable_chatbot_ui || vars.ENABLE_CHATBOT_UI || 'true' }}
       TF_VAR_chatbot_image_tag: ${{ vars.CHATBOT_IMAGE_TAG || 'latest' }}
       TF_VAR_chatbot_ui_image_tag: ${{ vars.CHATBOT_UI_IMAGE_TAG || 'latest' }}
+      TF_VAR_chatbot_api_dev_mode: ${{ github.event.inputs.chatbot_api_dev_mode || vars.CHATBOT_API_DEV_MODE || 'true' }}
       PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
 
     steps:
