@@ -12,7 +12,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Environment variables for build time (if needed by Next.js)
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
@@ -20,8 +20,8 @@ RUN npm run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -34,7 +34,7 @@ RUN chown nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder /app/next.config.ts ./
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/public ./public
+# COPY --from=builder /app/public ./public  <-- Removed as public/ is missing in backend
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 
@@ -42,8 +42,8 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-# set hostname to localhost
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+# set hostname to 0.0.0.0 for App Runner
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["npm", "start"]
