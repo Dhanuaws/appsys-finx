@@ -168,15 +168,39 @@ variable "enable_cognito" {
 }
 
 variable "enable_chatbot" {
-  description = "Set to true to provision ECR + App Runner for the chatbot backend"
+  description = "Set to true to provision ECR + App Runner for the chatbot backend API"
+  type        = bool
+  default     = true
+}
+
+variable "enable_chatbot_ui" {
+  description = "Set to true to provision ECR + App Runner for the chatbot frontend UI"
   type        = bool
   default     = true
 }
 
 variable "chatbot_image_tag" {
-  description = "Docker image tag to deploy to App Runner (typically set by CI/CD)"
+  description = "Docker image tag for the backend API (typically set by CI/CD)"
   type        = string
   default     = "latest"
+}
+
+variable "chatbot_ui_image_tag" {
+  description = "Docker image tag for the frontend UI (typically set by CI/CD)"
+  type        = string
+  default     = "latest"
+}
+
+variable "nextauth_secret" {
+  description = "Secret used for Next-Auth sessions (random string)"
+  type        = string
+  default     = "dev-secret-replace-me-123"
+}
+
+variable "nextauth_url" {
+  description = "The public URL of the chatbot UI (for Next-Auth redirects)"
+  type        = string
+  default     = ""
 }
 
 # ── Cognito fallback (used when enable_cognito=false but chatbot=true) ──

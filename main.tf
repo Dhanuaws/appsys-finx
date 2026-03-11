@@ -228,15 +228,46 @@ module "chatbot_api" {
   tags = local.tags
 }
 
+# ── Chatbot UI — App Runner ──────────────────────────────────
+module "chatbot_ui" {
+  count  = var.enable_chatbot_ui ? 1 : 0
+  source = "./modules/chatbot_ui"
+
+  service_name        = "finx-chatbot-ui"
+  ecr_repository_name = "finx-chatbot-ui"
+  environment         = var.environment
+  image_tag           = var.chatbot_ui_image_tag
+
+  backend_url = var.enable_chatbot ? module.chatbot_api[0].service_url : ""
+
+  cognito_user_pool_id  = var.enable_cognito ? aws_cognito_user_pool.finx[0].id : var.cognito_user_pool_id
+  cognito_app_client_id = var.enable_cognito ? aws_cognito_user_pool_client.finx_frontend[0].id : var.cognito_app_client_id
+
+  nextauth_secret = var.nextauth_secret
+  nextauth_url    = var.nextauth_url
+
+  tags = local.tags
+}
+
 # ── Outputs ───────────────────────────────────────────────────
 output "chatbot_api_url" {
   description = "App Runner URL for the FinX Chatbot API"
-  value       = var.enable_chatbot ? module.chatbot_api[0].service_url : "chatbot disabled"
+  value       = var.enable_chatbot ? module.chatbot_api[0].service_url : "disabled"
 }
 
-output "ecr_repository_url" {
-  description = "ECR repo to push the backend Docker image"
-  value       = var.enable_chatbot ? module.chatbot_api[0].ecr_repository_url : "chatbot disabled"
+output "chatbot_ui_url" {
+  description = "App Runner URL for the FinX Chatbot UI"
+  value       = var.enable_chatbot_ui ? module.chatbot_ui[0].service_url : "disabled"
+}
+
+output "ecr_repository_url_api" {
+  description = "ECR repo for the backend Docker image"
+  value       = var.enable_chatbot ? module.chatbot_api[0].ecr_repository_url : "disabled"
+}
+
+output "ecr_repository_url_ui" {
+  description = "ECR repo for the frontend Docker image"
+  value       = var.enable_chatbot_ui ? module.chatbot_ui[0].ecr_repository_url : "disabled"
 }
 
 output "cognito_user_pool_id" {
@@ -267,8 +298,9 @@ module "observability" {
   # SQS DLQ name (must match audit_queue module)
   dlq_name = "appsys-invi-invoice-audit-events-dlq"
 
-  # App Runner log group (created by chatbot_api module)
-  apprunner_log_group = "/aws/apprunner/finx-chatbot-api"
+  # App Runner log groups
+  apprunner_log_group    = "/aws/apprunner/finx-chatbot-api"
+  apprunner_log_group_ui = "/aws/apprunner/finx-chatbot-ui"
 
   # Do NOT create log groups here — lambda_app and chatbot_api modules own them
   create_log_groups = false

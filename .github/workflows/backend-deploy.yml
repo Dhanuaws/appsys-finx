@@ -1,173 +1,56 @@
-name: 'Backend — Build, Push ECR, Deploy App Runner'
+name: 'Backend Deploy to Dev'
 
-# Triggers on:
-# - Push to main → build + push + deploy
-# - PR → build + push to ECR only (no deploy)
-# - Manual dispatch (for hotfixes)
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - 'backend/**'
       - '.github/workflows/backend-deploy.yml'
-  pull_request:
-    paths:
-      - 'backend/**'
   workflow_dispatch:
-    inputs:
-      image_tag:
-        description: 'Docker image tag to deploy (default: git SHA)'
-        required: false
-        default: ''
 
 permissions:
   id-token: write
   contents: read
 
-env:
-  AWS_REGION: "us-east-1"
-  AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHub-Role"
-  ECR_REPOSITORY: "finx-chatbot-api"
-  APP_RUNNER_SERVICE: "finx-chatbot-api"
-
 jobs:
-  # ── Job 1: Build & push Docker image to ECR ──────────────────
-  build-and-push:
-    name: Build & Push to ECR
+  deploy:
+    name: 'Build and Push'
     runs-on: ubuntu-latest
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tag }}
-      ecr_registry: ${{ steps.login-ecr.outputs.registry }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Compute image tag
-        id: meta
-        run: |
-          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
-            TAG="${{ github.event.inputs.image_tag }}"
-          else
-            TAG="${{ github.sha }}"
-          fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${TAG}" >> $GITHUB_OUTPUT
-
-      - name: Build Docker image
-        working-directory: backend
-        run: |
-          docker build \
-            --tag "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.tag }}" \
-            --tag "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" \
-            --label "git_sha=${{ github.sha }}" \
-            --label "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            .
-
-      - name: Push to ECR
-        run: |
-          docker push "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.tag }}"
-          docker push "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
-
-      - name: Run basic health check
-        run: |
-          docker run --rm \
-            -e DEV_MODE=true \
-            -e AWS_REGION=${{ env.AWS_REGION }} \
-            -p 8000:8000 \
-            --name finx-healthcheck \
-            "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.tag }}" &
-          sleep 8
-          curl -f http://localhost:8000/health || (docker logs finx-healthcheck && exit 1)
-          docker stop finx-healthcheck || true
-
-  # ── Job 2: Deploy to App Runner (main branch only) ────────────
-  deploy-apprunner:
-    name: Deploy to App Runner
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     environment: dev
 
+    env:
+      AWS_ROLE_ARN: "arn:aws:iam::320042238431:role/GitHub-Role"
+      AWS_REGION: "us-east-1"
+      ECR_REPOSITORY: "finx-chatbot-api"
+      SERVICE_NAME: "finx-chatbot-api"
+
     steps:
-      - name: Configure AWS Credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Update App Runner service with new image
-        run: |
-          # Get the service ARN
-          SERVICE_ARN=$(aws apprunner list-services \
-            --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].ServiceArn" \
-            --output text)
+    - name: Configure AWS Credentials via OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ env.AWS_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
 
-          if [ -z "$SERVICE_ARN" ]; then
-            echo "❌ App Runner service '${{ env.APP_RUNNER_SERVICE }}' not found."
-            echo "Run Terraform with enable_chatbot=true first."
-            exit 1
-          fi
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-          echo "Updating service: ${SERVICE_ARN}"
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-          aws apprunner start-deployment --service-arn "${SERVICE_ARN}"
-
-          echo "::notice::Deployment triggered for App Runner service: ${{ env.APP_RUNNER_SERVICE }}"
-          echo "::notice::Image tag: ${{ needs.build-and-push.outputs.image_tag }}"
-
-      - name: Wait for App Runner deployment
-        run: |
-          SERVICE_ARN=$(aws apprunner list-services \
-            --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].ServiceArn" \
-            --output text)
-
-          echo "Waiting for deployment to complete..."
-          for i in $(seq 1 20); do
-            STATUS=$(aws apprunner describe-service \
-              --service-arn "${SERVICE_ARN}" \
-              --query "Service.Status" \
-              --output text)
-            echo "  Status: ${STATUS} (attempt ${i}/20)"
-            if [ "${STATUS}" = "RUNNING" ]; then
-              echo "✅ Deployment complete!"
-              break
-            fi
-            if [ "${STATUS}" = "OPERATION_IN_PROGRESS" ]; then
-              sleep 30
-            else
-              echo "❌ Unexpected status: ${STATUS}"
-              exit 1
-            fi
-          done
-
-      - name: Verify health endpoint
-        run: |
-          SERVICE_URL=$(aws apprunner describe-service \
-            --service-arn "$(aws apprunner list-services \
-              --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE }}'].ServiceArn" \
-              --output text)" \
-            --query "Service.ServiceUrl" \
-            --output text)
-
-          echo "Checking health at https://${SERVICE_URL}/health"
-          curl -f "https://${SERVICE_URL}/health" | jq .
-          echo "✅ Backend is healthy!"
-
-      - name: Summary
-        run: |
-          echo "### 🚀 Backend Deployed!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Service:** ${{ env.APP_RUNNER_SERVICE }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image Tag:** ${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Region:** ${{ env.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+    - name: Update App Runner Service
+      run: |
+        aws apprunner update-service \
+          --service-arn $(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${{ env.SERVICE_NAME }}'].ServiceArn" --output text) \
+          --source-configuration "{ \"ImageRepository\": { \"ImageIdentifier\": \"${{ steps.build-image.outputs.image }}\", \"ImageRepositoryType\": \"ECR\" } }"
