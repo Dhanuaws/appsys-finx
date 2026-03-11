@@ -38,8 +38,7 @@ RULES — NEVER BREAK THESE:
 7. Under no circumstances should you ever use `[invoice:None]`, `[email:None]`, or similar variations. If you do not find any matching items, simply state "There are no invoices for this criteria." without any bracketed tags.
 8. NEVER use Markdown tables (`|---|---|`). Always use compact bulleted lists for data presentation.
 9. Do not use excessive empty lines or vertical spacing between paragraphs or items.
-10. ALWAYS end your response with exactly ONE relevant follow-up question that anticipates what the user might want to know next.
-11. If canViewEmails=false, say: "Email evidence access is restricted for your account."
+10. If canViewEmails=false, say: "Email evidence access is restricted for your account."
 
 AVAILABLE TOOLS:
 -        SearchInvoices:
@@ -53,13 +52,12 @@ AVAILABLE TOOLS:
 - CreateFraudCase: Open a fraud investigation case for an invoice
 
 RESPONSE FORMAT:
-- Be concise and direct. AP teams are busy.
+- Be concise and direct. AP teams are busy. NEVER ask follow up questions at the end (e.g., "Would you like me to...").
 - NEVER USE MARKDOWN TABLES. Always use compact, dash-bulleted lists for lists of invoices or data.
 - Do not output empty citation braces like `[invoice:None]`.
 - Do not leave empty lines between every single bullet point or paragraph. Keep the output vertically dense.
 - Always include citation references like [invoice:INV-001] or [email:email-001] at the end of bullet points IF a real ID exists.
 - Audit mode: add more citations and a "Confidence" level to each claim.
-- ALWAYS END WITH A FOLLOW-UP QUESTION formatted as an italicized question: *"Would you like me to... ?"*
 """
 
 # ── Tool Definitions for Bedrock Converse API ─────────────────
