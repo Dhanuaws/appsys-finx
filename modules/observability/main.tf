@@ -82,6 +82,21 @@ resource "aws_cloudwatch_log_metric_filter" "apprunner_5xx" {
   }
 }
 
+# Filter 1.1: App Runner UI 5xx responses
+resource "aws_cloudwatch_log_metric_filter" "apprunner_ui_5xx" {
+  name           = "${local.prefix}-apprunner-ui-5xx"
+  log_group_name = var.apprunner_log_group_ui
+  pattern        = "[ip, user, date, time, request, status_code=5*, size]"
+
+  metric_transformation {
+    name      = "AppRunnerUI5xxCount"
+    namespace = "${local.prefix}/AppRunner"
+    value     = "1"
+    default_value = "0"
+    unit      = "Count"
+  }
+}
+
 # Filter 2: Bedrock / NovaLite errors in App Runner structured logs
 resource "aws_cloudwatch_log_metric_filter" "bedrock_errors" {
   name           = "${local.prefix}-bedrock-errors"

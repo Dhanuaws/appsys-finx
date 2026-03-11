@@ -44,9 +44,15 @@ variable "dlq_name" {
 
 # ── App Runner ────────────────────────────────────────────────
 variable "apprunner_log_group" {
-  description = "CloudWatch log group name for the App Runner chatbot service"
+  description = "CloudWatch log group name for the App Runner chatbot backend API"
   type        = string
   default     = "/aws/apprunner/finx-chatbot-api"
+}
+
+variable "apprunner_log_group_ui" {
+  description = "CloudWatch log group name for the App Runner chatbot frontend UI"
+  type        = string
+  default     = "/aws/apprunner/finx-chatbot-ui"
 }
 
 variable "tags" {

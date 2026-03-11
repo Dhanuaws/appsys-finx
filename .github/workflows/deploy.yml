@@ -26,7 +26,11 @@ on:
         required: false
         default: ''
       enable_chatbot:
-        description: 'Enable App Runner chatbot (overrides repo var)'
+        description: 'Enable App Runner chatbot backend (overrides repo var)'
+        required: false
+        default: ''
+      enable_chatbot_ui:
+        description: 'Enable App Runner chatbot frontend (overrides repo var)'
         required: false
         default: ''
 
@@ -48,9 +52,11 @@ jobs:
       # Dev-account-only state bucket (320042238431) — no cross-account dependency
       TF_STATE_BUCKET: "appsys-finx-dev-terraform-state"
       # ── Chatbot feature flags ──
-      TF_VAR_enable_cognito: ${{ github.event.inputs.enable_cognito || vars.ENABLE_COGNITO || 'false' }}
-      TF_VAR_enable_chatbot: ${{ github.event.inputs.enable_chatbot || vars.ENABLE_CHATBOT || 'false' }}
+      TF_VAR_enable_cognito: ${{ github.event.inputs.enable_cognito || vars.ENABLE_COGNITO || 'true' }}
+      TF_VAR_enable_chatbot: ${{ github.event.inputs.enable_chatbot || vars.ENABLE_CHATBOT || 'true' }}
+      TF_VAR_enable_chatbot_ui: ${{ github.event.inputs.enable_chatbot_ui || vars.ENABLE_CHATBOT_UI || 'true' }}
       TF_VAR_chatbot_image_tag: ${{ vars.CHATBOT_IMAGE_TAG || 'latest' }}
+      TF_VAR_chatbot_ui_image_tag: ${{ vars.CHATBOT_UI_IMAGE_TAG || 'latest' }}
       PLAN_ONLY: ${{ github.event.inputs.plan_only || 'false' }}
 
     steps:
