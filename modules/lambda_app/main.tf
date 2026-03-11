@@ -62,6 +62,11 @@ data "aws_iam_policy_document" "email_parser_inline" {
     actions   = ["dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:GetItem"]
     resources = values(var.dynamodb_table_arns)
   }
+
+  statement {
+    actions   = ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"]
+    resources = var.bedrock_model_arns
+  }
 }
 
 resource "aws_iam_role_policy" "email_parser_inline" {
