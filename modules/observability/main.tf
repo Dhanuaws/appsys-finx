@@ -69,6 +69,7 @@ resource "aws_cloudwatch_log_group" "obs_audit_writer" {
 # ── Log Metric Filters (FREE) ─────────────────────────────────
 # Filter 1: App Runner 5xx responses (Pattern: HTTP 5xx in access log)
 resource "aws_cloudwatch_log_metric_filter" "apprunner_5xx" {
+  count          = var.enable_chatbot ? 1 : 0
   name           = "${local.prefix}-apprunner-5xx"
   log_group_name = var.apprunner_log_group
   pattern        = "[ip, user, date, time, request, status_code=5*, size]"
@@ -84,6 +85,7 @@ resource "aws_cloudwatch_log_metric_filter" "apprunner_5xx" {
 
 # Filter 1.1: App Runner UI 5xx responses
 resource "aws_cloudwatch_log_metric_filter" "apprunner_ui_5xx" {
+  count          = var.enable_chatbot_ui ? 1 : 0
   name           = "${local.prefix}-apprunner-ui-5xx"
   log_group_name = var.apprunner_log_group_ui
   pattern        = "[ip, user, date, time, request, status_code=5*, size]"
@@ -99,6 +101,7 @@ resource "aws_cloudwatch_log_metric_filter" "apprunner_ui_5xx" {
 
 # Filter 2: Bedrock / NovaLite errors in App Runner structured logs
 resource "aws_cloudwatch_log_metric_filter" "bedrock_errors" {
+  count          = var.enable_chatbot ? 1 : 0
   name           = "${local.prefix}-bedrock-errors"
   log_group_name = var.apprunner_log_group
   pattern        = "{ $.levelname = \"ERROR\" && $.message = \"*Bedrock*\" }"
@@ -114,6 +117,7 @@ resource "aws_cloudwatch_log_metric_filter" "bedrock_errors" {
 
 # Filter 3: App Runner high latency (requests that take > 5000ms)
 resource "aws_cloudwatch_log_metric_filter" "apprunner_slow" {
+  count          = var.enable_chatbot ? 1 : 0
   name           = "${local.prefix}-apprunner-slow-requests"
   log_group_name = var.apprunner_log_group
   pattern        = "{ $.duration_ms > 5000 }"
@@ -219,6 +223,7 @@ resource "aws_cloudwatch_metric_alarm" "sqs_dlq" {
 
 # Alarm 5: App Runner 5xx errors (from log metric filter above)
 resource "aws_cloudwatch_metric_alarm" "apprunner_5xx" {
+  count               = var.enable_chatbot ? 1 : 0
   alarm_name          = "${local.prefix}-apprunner-5xx-errors"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 2
@@ -237,6 +242,7 @@ resource "aws_cloudwatch_metric_alarm" "apprunner_5xx" {
 
 # Alarm 6: Bedrock / Nova Lite errors
 resource "aws_cloudwatch_metric_alarm" "bedrock_errors" {
+  count               = var.enable_chatbot ? 1 : 0
   alarm_name          = "${local.prefix}-bedrock-errors"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -255,6 +261,7 @@ resource "aws_cloudwatch_metric_alarm" "bedrock_errors" {
 
 # Alarm 7: App Runner slow requests (>5s)
 resource "aws_cloudwatch_metric_alarm" "apprunner_slow" {
+  count               = var.enable_chatbot ? 1 : 0
   alarm_name          = "${local.prefix}-apprunner-slow-requests"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 2

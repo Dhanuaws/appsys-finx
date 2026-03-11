@@ -238,7 +238,8 @@ module "chatbot_ui" {
   environment         = var.environment
   image_tag           = var.chatbot_ui_image_tag
 
-  backend_url = var.enable_chatbot ? module.chatbot_api[0].service_url : ""
+  # Safely handle the backend URL even if the backend is disabled
+  backend_url = join("", module.chatbot_api[*].service_url)
 
   cognito_user_pool_id  = var.enable_cognito ? aws_cognito_user_pool.finx[0].id : var.cognito_user_pool_id
   cognito_app_client_id = var.enable_cognito ? aws_cognito_user_pool_client.finx_frontend[0].id : var.cognito_app_client_id
@@ -252,22 +253,22 @@ module "chatbot_ui" {
 # ── Outputs ───────────────────────────────────────────────────
 output "chatbot_api_url" {
   description = "App Runner URL for the FinX Chatbot API"
-  value       = var.enable_chatbot ? module.chatbot_api[0].service_url : "disabled"
+  value       = join("", module.chatbot_api[*].service_url)
 }
 
 output "chatbot_ui_url" {
   description = "App Runner URL for the FinX Chatbot UI"
-  value       = var.enable_chatbot_ui ? module.chatbot_ui[0].service_url : "disabled"
+  value       = join("", module.chatbot_ui[*].service_url)
 }
 
 output "ecr_repository_url_api" {
   description = "ECR repo for the backend Docker image"
-  value       = var.enable_chatbot ? module.chatbot_api[0].ecr_repository_url : "disabled"
+  value       = join("", module.chatbot_api[*].ecr_repository_url)
 }
 
 output "ecr_repository_url_ui" {
   description = "ECR repo for the frontend Docker image"
-  value       = var.enable_chatbot_ui ? module.chatbot_ui[0].ecr_repository_url : "disabled"
+  value       = join("", module.chatbot_ui[*].ecr_repository_url)
 }
 
 output "cognito_user_pool_id" {
@@ -301,6 +302,9 @@ module "observability" {
   # App Runner log groups
   apprunner_log_group    = "/aws/apprunner/finx-chatbot-api"
   apprunner_log_group_ui = "/aws/apprunner/finx-chatbot-ui"
+
+  enable_chatbot    = var.enable_chatbot
+  enable_chatbot_ui = var.enable_chatbot_ui
 
   # Do NOT create log groups here — lambda_app and chatbot_api modules own them
   create_log_groups = false

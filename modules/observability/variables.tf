@@ -16,6 +16,16 @@ variable "create_log_groups" {
   default     = false
 }
 
+variable "enable_chatbot" {
+  type    = bool
+  default = true
+}
+
+variable "enable_chatbot_ui" {
+  type    = bool
+  default = true
+}
+
 # ── Lambda function names ─────────────────────────────────────
 variable "fn_email_parser" {
   description = "Name of the email-attachment-parser Lambda"
