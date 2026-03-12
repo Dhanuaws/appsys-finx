@@ -168,7 +168,66 @@ terraform output ecr_repository_url  # → push Docker image here
 
 ---
 
-## Deploy
+## 5. Hackathon Build & Deployment Guide
+
+This section provides the end-to-end steps to deploy FinX and populate it with data for evaluation.
+
+### 5.1 Infrastructure Deployment (Terraform)
+1. **Initialize Terraform**:
+   ```bash
+   terraform init -backend-config="bucket=YOUR_TF_STATE_BUCKET"
+   ```
+2. **Deploy Core Resources**:
+   ```bash
+   terraform apply \
+     -var="enable_cognito=true" \
+     -var="enable_chatbot=true" \
+     -var="enable_chatbot_ui=true"
+   ```
+   *This provisions DynamoDB, S3, Cognito, ECR, and App Runner.*
+
+### 5.2 Application Deployment
+1. **Build & Push Backend**:
+   ```bash
+   cd backend
+   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin YOUR_ECR_URL
+   docker build -t finx-chatbot-api .
+   docker tag finx-chatbot-api:latest YOUR_ECR_URL:latest
+   docker push YOUR_ECR_URL:latest
+   ```
+2. **Build & Push Frontend**:
+   *Follow similar steps in the `frontend` directory using the `finx-chatbot-ui` ECR repository.*
+
+---
+
+## 6. Data Ingestion & Testing
+
+To test the intelligence of the platform, you can ingest documents using two methods:
+
+### Method A: Direct S3 Upload (Internal Ingestion)
+1. Navigate to the **S3 Bucket** (from `terraform output`).
+2. Upload a PDF or Image invoice to the `email-attachment/` prefix.
+3. This triggers the **Nova Extractor Lambda** which processes the document using Amazon Nova Lite and stores it in DynamoDB.
+
+### Method B: Email Ingestion (External Ingestion)
+1. Send an email with an invoice attachment (PDF/PNG/JPG) to: `test@intake-dev.YOUR_DOMAIN` (default: `test@intake-dev`)
+2. **SES** receives the email, stores it in S3, and triggers the **Email Parser Lambda**.
+3. The parser extracts the attachment and passes it to the Nova Extractor for intelligent analysis.
+
+---
+
+## 7. Chatbot Verification
+
+Once documents are ingested, interact with the **FinX Copilot**:
+
+1. **Basic Search**: "Show me all invoices from Amazon processed today."
+2. **Fraud Detection**: "Are there any suspicious invoices in the system?"
+3. **Audit Query**: "Why was the invoice from Global Logistics rejected?"
+4. **Evidence Retrieval**: "Show me the email evidence for invoice #INV-1002."
+
+---
+
+## 8. Deployment Status & Registry
 
 ### 1. Build & push the backend image
 ```bash
@@ -195,7 +254,10 @@ aws apprunner start-deployment \
 
 ---
 
-## GitHub Actions Variables
+
+---
+
+## 9. GitHub Actions Variables
 
 Set these in **Settings → Environments → dev → Variables**:
 
