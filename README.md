@@ -2,39 +2,77 @@
 
 > **AWS Nova Hackathon Project** | Powered by [Amazon Nova Lite](https://aws.amazon.com/ai/generative-ai/nova/)
 
-FinX is an enterprise-grade **Invoice Intelligence Copilot** for accounts payable teams. It uses Amazon Nova Lite (via Bedrock) for explainable, evidence-first AI that can search invoices, detect fraud, retrieve email evidence, and manage investigation cases.
+> [!NOTE]
+> This is our beta version (MVP). We are actively adding more features to transition to a production-grade system and prepare for listing on the AWS Marketplace.
+
+## 1. Project Summary & Purpose
+**FinX** is an enterprise-grade **Invoice Intelligence Copilot** for accounts payable teams. It uses Amazon Nova Lite (via Bedrock) for explainable, evidence-first AI that can search invoices, detect fraud, retrieve email evidence, and manage investigation cases.
+
+### Leveraging Amazon Nova Foundation Models
+FinX leverages **Amazon Nova Lite** (via Amazon Bedrock) to provide:
+- **Explainable AI (Evidence-First)**: Every claim is backed by specific evidence (invoice IDs, line items, email snippets).
+- **Agentic Orchestration**: Nova Lite acts as an agent, using tools to search DynamoDB, retrieve S3 evidence, and manage fraud cases.
+- **High Intelligence & Low Latency**: Seamless real-time chat interactions powered by AWS's latest foundation models.
 
 ---
 
-## Architecture
+## 2. Business Problem & Solution
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Browser (Next.js 15 · TypeScript · Tailwind CSS v4)        │
-│  3-pane layout: Filter Pane | Chat | Evidence Panel         │
-└────────────────────────┬────────────────────────────────────┘
-                         │ SSE (POST /api/chat/stream)
-                         │ (Next.js Edge proxy → adds JWT)
-┌────────────────────────▼────────────────────────────────────┐
-│  AWS App Runner — FastAPI (Python 3.12)                     │
-│  ┌─────────────┐  ┌────────────────┐  ┌──────────────────┐ │
-│  │ RBAC Mdlwr  │  │ Nova Lite Orch │  │ DynamoDB / S3    │ │
-│  │ (Cognito    │  │ (6 tools, SSE) │  │ Email Evidence   │ │
-│  │  JWT RS256) │  │                │  │ Signed URLs      │ │
-│  └─────────────┘  └────────────────┘  └──────────────────┘ │
-└────────────────────────────────────────────────────────────-┘
-         │                  │                    │
-    Cognito JWT      Bedrock Nova Lite      DynamoDB Tables
-    validation       (amazon.nova-         FusionInvoicesTable
-                     lite-v1:0)            RawEmailMetaData
-                                           FinXEmailIndex
-                                           FinXFraudCases
-                                     S3: amzn-s3-nova-bucket
-```
+### The Problem
+Enterprises handle thousands of manual invoice validations, leading to:
+1.  **High Manual Effort**: Humans cross-referencing data between emails and invoices.
+2.  **Fraud Risks**: Duplicate or forged billing escaping detection.
+3.  **Audit Gaps**: Difficulties in tracing the reasoning behind financial decisions.
+
+### The FinX Solution
+1.  **Rapid Ingestion**: Automatic parsing and structuring of invoices.
+2.  **Fraud Intelligence**: Real-time scoring for suspicious documents.
+3.  **Explainable Auditing**: A natural-language interface to the processing history (Audit Layer).
+4.  **Enterprise Security**: Deep integration with AWS IAM, Cognito, and RBAC.
 
 ---
 
-## Quick Start
+## 3. Architecture
+
+### 3.1 Infrastructure Architecture (AWS)
+```mermaid
+graph TD
+    User((User))
+    
+    subgraph "Compute & Orchestration"
+        AppRunnerFE[AWS App Runner: Frontend]
+        AppRunnerBE[AWS App Runner: Backend API]
+        Cognito[Amazon Cognito: Authentication]
+    end
+
+    subgraph "Data & Storage"
+        DynamoDB[(Amazon DynamoDB)]
+        S3[Amazon S3: Evidence]
+        Bedrock[Amazon Bedrock: Nova Lite]
+    end
+
+    subgraph "Ingestion Pipeline"
+        S3Raw[S3: Raw Uploads] -->|S3 Event| LambdaParser[Lambda: Email Parser]
+        LambdaParser --> S3Ext[S3: Attachments]
+        S3Ext -->|S3 Event| LambdaExtractor[Lambda: Nova Extractor]
+        LambdaExtractor --> DynamoDB
+    end
+
+    User --> AppRunnerFE
+    AppRunnerFE -->|JWT| AppRunnerBE
+    AppRunnerBE --> Cognito
+    AppRunnerBE -->|Query| DynamoDB
+    AppRunnerBE -->|Retrieve| S3
+    AppRunnerBE -->|Orchestrate| Bedrock
+```
+
+### 3.2 Backend & Frontend Overview
+- **Backend (FastAPI)**: Modular service architecture orchestrating Bedrock, DynamoDB, and S3.
+- **Frontend (Next.js 15)**: A 3-pane Intelligence Cockpit for unified filtering, chat, and evidence viewing.
+
+---
+
+## 4. Quick Start
 
 ### Local Development (with Docker Compose)
 ```bash
@@ -106,6 +144,8 @@ appsys-invi-iac-dev/
     ├── lambda_app/             # Existing Lambda functions
     └── sqs_queue/              # SQS + DLQ module
 ```
+
+---
 
 ---
 
