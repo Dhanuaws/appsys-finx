@@ -172,7 +172,14 @@ terraform output ecr_repository_url  # → push Docker image here
 
 This section provides the end-to-end steps to deploy FinX and populate it with data for evaluation.
 
-### 5.1 Infrastructure Deployment (Terraform)
+### 5.1 Repository Access
+To begin, clone the repository to your local workspace:
+```bash
+git clone https://github.com/Dhanuaws/appsys-finx.git
+cd appsys-finx
+```
+
+### 5.2 Infrastructure Deployment (Terraform)
 1. **Initialize Terraform**:
    ```bash
    terraform init -backend-config="bucket=YOUR_TF_STATE_BUCKET"
