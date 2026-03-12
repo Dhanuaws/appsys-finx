@@ -13,7 +13,7 @@ from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
 from app.config import get_settings
-from app.models import ActorContext, Invoice, InvoiceFilters
+from app.models import ActorContext, Invoice, InvoiceFilters, AuditRecord
 
 log = logging.getLogger(__name__)
 
@@ -278,3 +278,34 @@ def create_fraud_case(actor: ActorContext, invoice_id: str, severity: str, reaso
         raise
 
     return case
+# ── Audit Logs ────────────────────────────────────────────────
+def list_audit_logs(
+    actor: ActorContext,
+    event_type: Optional[str] = None,
+    document_hash: Optional[str] = None,
+    limit: int = 50,
+) -> list[AuditRecord]:
+    """
+    Query InvoiceAuditLayer table.
+    Enforces tenant isolation.
+    """
+    settings = get_settings()
+    db = _get_resource()
+    table = db.Table(settings.table_audit_layer)
+
+    filter_expr = Attr("tenantId").eq(actor.tenant_id)
+    if event_type:
+        filter_expr = filter_expr & Attr("EventType").eq(event_type)
+    if document_hash:
+        filter_expr = filter_expr & Attr("DocumentHash").eq(document_hash)
+
+    try:
+        response = table.scan(
+            FilterExpression=filter_expr,
+            Limit=limit,
+        )
+    except ClientError as e:
+        log.error("Scan InvoiceAuditLayer failed: %s", e)
+        return []
+
+    return [AuditRecord.from_dynamo(item) for item in response.get("Items", [])]

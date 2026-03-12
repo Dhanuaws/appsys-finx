@@ -25,6 +25,35 @@ class ActorContext(BaseModel):
     vendor_ids: list[str] = []
 
 
+# ── Audit Layer ────────────────────────────────────────────────
+class AuditRecord(BaseModel):
+    audit_id: str = Field(alias="AuditId")
+    event_type: str = Field(alias="EventType")
+    document_hash: Optional[str] = Field(alias="DocumentHash", default=None)
+    tenant_id: str = Field(alias="tenantId", default="")
+    status: str = Field(default="LOGGED")
+    reason: Optional[str] = None
+    message: str = ""
+    processed_at: str = Field(alias="ProcessedAt", default="")
+    metadata: dict = {}
+
+    model_config = {"populate_by_name": True}
+
+    @classmethod
+    def from_dynamo(cls, item: dict) -> "AuditRecord":
+        return cls(
+            AuditId=item.get("AuditId", ""),
+            EventType=item.get("EventType", ""),
+            DocumentHash=item.get("DocumentHash"),
+            tenantId=item.get("tenantId", ""),
+            status=item.get("status", "LOGGED"),
+            reason=item.get("reason"),
+            message=item.get("message", ""),
+            ProcessedAt=item.get("ProcessedAt", ""),
+            metadata=item.get("metadata", {})
+        )
+
+
 # ── Invoice ────────────────────────────────────────────────────
 class InvoiceLine(BaseModel):
     line_number: int
