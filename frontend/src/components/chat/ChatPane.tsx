@@ -17,6 +17,7 @@ const FINX_NOVA_BADGE = (
 
 async function streamChat(
     userMessage: string,
+    history: { role: string; content: { text: string }[] }[],
     auditMode: boolean,
     onChunk: (chunk: string) => void,
     onCitations: (citations: Citation[]) => void,
@@ -30,6 +31,7 @@ async function streamChat(
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 message: userMessage,
+                conversation_history: history,
                 audit_mode: auditMode,
             }),
         });
@@ -76,11 +78,24 @@ export default function ChatPane() {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
 
     const handleCitationClick = useCallback(
-        (citation: Citation) => {
-            // Citations of type "invoice" open the evidence panel
-            if (citation.type === "invoice" || citation.type === "email") {
-                // In a real app we'd fetch the invoice; for now just show the citation ID
-                console.log("Open evidence for:", citation);
+        async (citation: Citation) => {
+            if ((citation.type === "invoice" || citation.type === "attachment") && citation.s3Key) {
+                try {
+                    const res = await fetch(`/api/download?s3_key=${encodeURIComponent(citation.s3Key)}`);
+                    if (!res.ok) throw new Error("Failed to get signed URL");
+                    const data = await res.json();
+                    
+                    const a = document.createElement("a");
+                    a.href = data.signed_url;
+                    a.download = citation.s3Key.split("/").pop() || "document.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                } catch (error) {
+                    console.error("Failed to download:", error);
+                }
+            } else {
+                console.log("No downloadable file for citation:", citation);
             }
         },
         []
@@ -92,6 +107,14 @@ export default function ChatPane() {
 
         setInput("");
         textareaRef.current?.focus();
+
+        const historyForApi = messages
+            .filter((m) => m.role !== "system" && m.content)
+            .slice(-10)
+            .map((m) => ({
+                role: m.role,
+                content: [{ text: m.content }],
+            }));
 
         // Add user message
         addMessage({ role: "user", content: text });
@@ -105,6 +128,7 @@ export default function ChatPane() {
 
         await streamChat(
             isAuditMode ? `[AUDIT MODE] ${text}` : text,
+            historyForApi,
             isAuditMode,
             (chunk) => {
                 accContent += chunk;

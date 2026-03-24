@@ -27,9 +27,8 @@ async def chat_stream(
     Stream a chat response from Amazon Nova Lite.
     Returns Server-Sent Events (SSE) with text chunks and citations.
     """
-    # In production, maintain conversation history in ElastiCache/DynamoDB
-    # For now, use an empty history per request (stateless; frontend manages history)
-    conversation_history: list[dict] = []
+    # Frontend manages stateless conversation history by passing it
+    conversation_history = body.conversation_history or []
 
     async def event_generator():
         try:

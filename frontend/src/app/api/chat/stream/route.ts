@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
                 message: body.message.trim().slice(0, 4000), // hard limit
                 audit_mode: Boolean(body.audit_mode),
                 conversation_id: body.conversation_id ?? null,
+                conversation_history: body.conversation_history || [],
             }),
             // @ts-expect-error — duplex required in Node edge streams
             duplex: "half",

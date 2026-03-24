@@ -164,6 +164,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     conversation_id: Optional[str] = None
     audit_mode: bool = False
+    conversation_history: list[dict] = []
 
 
 class Citation(BaseModel):

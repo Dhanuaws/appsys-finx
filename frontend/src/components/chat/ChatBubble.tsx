@@ -114,8 +114,11 @@ function MessageContent({
     content: string;
     isStreaming?: boolean;
 }) {
+    // Final cleanup of any stray citation bracket string
+    const cleanedContent = content.replace(/\[[a-z]+:[^\]]+\]/g, "");
+    
     // Simple inline Markdown Table Parser
-    const lines = content.split('\n');
+    const lines = cleanedContent.split('\n');
     const elements: React.ReactNode[] = [];
     let tableLines: string[] = [];
     let inTable = false;
@@ -131,7 +134,9 @@ function MessageContent({
                 tableLines = [];
                 inTable = false;
             }
-            elements.push(<span key={i}>{line}<br /></span>);
+            if (line.trim().length > 0 || isStreaming) {
+                elements.push(<span key={i}>{line}<br /></span>);
+            }
         }
     }
 
@@ -193,7 +198,7 @@ function DownloadActions({ citations }: { citations: Citation[] }) {
     const handleIndividualDownload = async (citation: Citation) => {
         try {
             setDownloading(citation.id);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FINX_API_URL}/evidence/attachment/signed-url?s3_key=${encodeURIComponent(citation.s3Key!)}`);
+            const res = await fetch(`/api/download?s3_key=${encodeURIComponent(citation.s3Key!)}`);
             if (!res.ok) throw new Error("Failed to get signed URL");
             const data = await res.json();
 
