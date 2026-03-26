@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.DS_Store
+*.log
+.terraform
+.venv
+__pycache__
+*.pyc

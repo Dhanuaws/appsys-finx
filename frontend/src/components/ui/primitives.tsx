@@ -19,13 +19,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             primary:
                 "gradient-brand text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:brightness-110 active:scale-[0.97]",
             ghost:
-                "text-slate-300 hover:text-white hover:bg-white/6 active:bg-white/10",
+                "text-finx-text hover:text-finx-text hover:bg-finx-surface-hover active:bg-finx-surface-hover",
             glass:
-                "glass text-slate-200 hover:bg-white/8 hover:border-white/14 active:scale-[0.98]",
+                "glass text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong active:scale-[0.98]",
             danger:
                 "bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 active:scale-[0.97]",
             outline:
-                "border border-white/12 text-slate-300 hover:border-white/24 hover:text-white active:scale-[0.98]",
+                "border border-finx-border text-finx-text hover:border-finx-border-strong hover:text-finx-text active:scale-[0.98]",
         };
 
         const sizes = {
@@ -92,7 +92,7 @@ export function Card({ children, className, hover, onClick }: CardProps) {
             className={cn(
                 "glass rounded-[var(--radius-card)] p-4",
                 hover &&
-                "transition-all duration-200 hover:bg-white/7 hover:border-white/14 hover:shadow-lg cursor-pointer",
+                "transition-all duration-200 hover:bg-finx-surface-hover hover:border-finx-border-strong hover:shadow-lg cursor-pointer",
                 className
             )}
         >
@@ -120,7 +120,7 @@ export function Chip({ children, active, onClick, onRemove, className }: ChipPro
                 "inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-[var(--radius-chip)] border transition-all duration-180 cursor-pointer",
                 active
                     ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
-                    : "glass text-slate-400 hover:text-slate-200 hover:border-white/16",
+                    : "glass text-finx-text-muted hover:text-finx-text hover:border-finx-border-strong",
                 className
             )}
         >
@@ -153,7 +153,7 @@ export function Skeleton({ className }: { className?: string }) {
 export function Divider({ className }: { className?: string }) {
     return (
         <div
-            className={cn("h-px bg-white/6 w-full", className)}
+            className={cn("h-px bg-finx-surface w-full", className)}
             role="separator"
         />
     );
@@ -163,7 +163,7 @@ export function Divider({ className }: { className?: string }) {
 // ── Section heading ───────────────────────────────────────────
 export function SectionLabel({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
-        <p className={cn("text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2", className)}>
+        <p className={cn("text-xs font-semibold uppercase tracking-widest text-finx-text-dim mb-2", className)}>
             {children}
         </p>
     );
@@ -177,7 +177,7 @@ export function Tooltip({ children, label }: { children: React.ReactNode; label:
             {children}
             <span
                 role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs text-white bg-slate-800 border border-white/10 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
+                className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs text-finx-text bg-finx-surface-hover border border-finx-border rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
             >
                 {label}
             </span>

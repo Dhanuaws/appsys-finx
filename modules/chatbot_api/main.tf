@@ -97,6 +97,20 @@ data "aws_iam_policy_document" "chatbot_instance_policy" {
     resources = ["arn:aws:bedrock:${local.region}::foundation-model/amazon.nova-lite-v1:0"]
   }
 
+  # AWS Marketplace — Verify Customer Subscriptions
+  statement {
+    sid     = "MarketplaceResolveCustomer"
+    actions = ["aws-marketplace:ResolveCustomer"]
+    resources = ["*"]
+  }
+
+  # Cognito — Provision Tenant members
+  statement {
+    sid       = "CognitoAdminProvisioning"
+    actions   = ["cognito-idp:AdminCreateUser"]
+    resources = ["arn:aws:cognito-idp:${local.region}:${local.account_id}:userpool/${var.cognito_user_pool_id}"]
+  }
+
   # CloudWatch — write app logs
   statement {
     sid     = "CloudWatchLogs"

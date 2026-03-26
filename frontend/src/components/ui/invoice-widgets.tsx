@@ -79,7 +79,7 @@ export function ReasonTags({ reasons, maxVisible = 3 }: ReasonTagsProps) {
                 </span>
             ))}
             {rest > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-md bg-white/5 border border-white/10 text-slate-400">
+                <span className="px-2 py-0.5 text-xs rounded-md bg-finx-surface border border-finx-border text-finx-text-muted">
                     +{rest} more
                 </span>
             )}
@@ -142,8 +142,8 @@ export function CaseTimeline({ events }: { events: TimelineEvent[] }) {
                     {i < events.length - 1 && (
                         <span className="absolute -left-[14px] top-4 w-px h-full bg-white/8" />
                     )}
-                    <p className="text-xs font-medium text-slate-200">{ev.label}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{ev.time}</p>
+                    <p className="text-xs font-medium text-finx-text">{ev.label}</p>
+                    <p className="text-xs text-finx-text-dim mt-0.5">{ev.time}</p>
                 </li>
             ))}
         </ol>

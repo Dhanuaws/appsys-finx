@@ -37,18 +37,18 @@ export default function EvidencePanel() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 24 }}
                     transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                    className="flex flex-col h-full overflow-y-auto border-l border-white/6"
+                    className="flex flex-col h-full overflow-y-auto border-l border-finx-border"
                     aria-label="Evidence Panel"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 shrink-0">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-finx-border shrink-0">
                         <div className="flex items-center gap-2">
                             <FileText size={14} className="text-indigo-400" />
-                            <span className="text-xs font-semibold text-slate-300">Evidence</span>
+                            <span className="text-xs font-semibold text-finx-text">Evidence</span>
                         </div>
                         <button
                             onClick={close}
-                            className="p-1 glass rounded-lg text-slate-500 hover:text-slate-200 transition-colors"
+                            className="p-1 glass rounded-lg text-finx-text-dim hover:text-finx-text transition-colors"
                         >
                             <X size={13} />
                         </button>
@@ -56,7 +56,7 @@ export default function EvidencePanel() {
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-5">
                         {!selectedInvoice ? (
-                            <div className="text-center text-slate-500 text-sm pt-12">
+                            <div className="text-center text-finx-text-dim text-sm pt-12">
                                 <FileText size={32} className="mx-auto mb-3 opacity-30" />
                                 Select an invoice to view evidence
                             </div>
@@ -75,7 +75,7 @@ export default function EvidencePanel() {
                                     ) : emailEvidence ? (
                                         <EmailEvidenceCard evidence={emailEvidence} />
                                     ) : (
-                                        <div className="glass rounded-xl p-4 text-center text-xs text-slate-500">
+                                        <div className="glass rounded-xl p-4 text-center text-xs text-finx-text-dim">
                                             <Mail size={20} className="mx-auto mb-2 opacity-30" />
                                             No linked email evidence found for this invoice.
                                         </div>
@@ -92,7 +92,7 @@ export default function EvidencePanel() {
                                                 <div className="flex items-center gap-4">
                                                     <FraudScoreMeter score={selectedInvoice.fraudScore} />
                                                     <div className="flex-1">
-                                                        <p className="text-xs text-slate-400 mb-2">Detected reasons</p>
+                                                        <p className="text-xs text-finx-text-muted mb-2">Detected reasons</p>
                                                         <ReasonTags reasons={selectedInvoice.fraudReasons ?? []} />
                                                     </div>
                                                 </div>
@@ -137,27 +137,27 @@ function InvoiceSummaryCard({ invoice }: { invoice: NonNullable<ReturnType<typeo
         <Card className="space-y-3">
             <div className="flex items-start justify-between gap-2">
                 <div>
-                    <p className="text-xs text-slate-500 font-mono">#{invoice.invoiceNumber}</p>
+                    <p className="text-xs text-finx-text-dim font-mono">#{invoice.invoiceNumber}</p>
                     <p className="font-semibold text-slate-100 mt-0.5">{invoice.vendorName}</p>
                 </div>
                 <StatusBadge status={invoice.status} />
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
-                    <p className="text-slate-500 mb-0.5">Amount</p>
+                    <p className="text-finx-text-dim mb-0.5">Amount</p>
                     <AmountDisplay amount={invoice.amount} currency={invoice.currency} className="text-emerald-400 text-sm" />
                 </div>
                 <div>
-                    <p className="text-slate-500 mb-0.5">Date</p>
-                    <p className="text-slate-200">{formatDate(invoice.invoiceDate)}</p>
+                    <p className="text-finx-text-dim mb-0.5">Date</p>
+                    <p className="text-finx-text">{formatDate(invoice.invoiceDate)}</p>
                 </div>
                 <div>
-                    <p className="text-slate-500 mb-0.5">Entity</p>
-                    <p className="text-slate-200 truncate">{invoice.entityId || "—"}</p>
+                    <p className="text-finx-text-dim mb-0.5">Entity</p>
+                    <p className="text-finx-text truncate">{invoice.entityId || "—"}</p>
                 </div>
                 <div>
-                    <p className="text-slate-500 mb-0.5">Currency</p>
-                    <p className="text-slate-200">{invoice.currency}</p>
+                    <p className="text-finx-text-dim mb-0.5">Currency</p>
+                    <p className="text-finx-text">{invoice.currency}</p>
                 </div>
             </div>
             {invoice.exceptionCodes?.length > 0 && (
@@ -184,21 +184,21 @@ function EmailEvidenceCard({ evidence }: { evidence: import("@/lib/types").Email
                         <Mail size={13} className="text-violet-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-200 truncate">{evidence.subject}</p>
+                        <p className="text-xs font-semibold text-finx-text truncate">{evidence.subject}</p>
                         <div className="flex items-center gap-1.5 mt-1">
-                            <User size={10} className="text-slate-500" />
-                            <p className="text-xs text-slate-400 truncate">{evidence.sender}</p>
+                            <User size={10} className="text-finx-text-dim" />
+                            <p className="text-xs text-finx-text-muted truncate">{evidence.sender}</p>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                            <Calendar size={10} className="text-slate-500" />
-                            <p className="text-xs text-slate-500">{formatDate(evidence.date)}</p>
+                            <Calendar size={10} className="text-finx-text-dim" />
+                            <p className="text-xs text-finx-text-dim">{formatDate(evidence.date)}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Body snippet */}
                 {evidence.bodySnippet && (
-                    <div className="bg-white/3 rounded-lg px-3 py-2 text-xs text-slate-400 leading-relaxed border-l-2 border-violet-500/30">
+                    <div className="bg-white/3 rounded-lg px-3 py-2 text-xs text-finx-text-muted leading-relaxed border-l-2 border-violet-500/30">
                         {truncate(evidence.bodySnippet, 240)}
                     </div>
                 )}
@@ -218,8 +218,8 @@ function EmailEvidenceCard({ evidence }: { evidence: import("@/lib/types").Email
                                     <Paperclip size={12} className="text-amber-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium text-slate-200 truncate">{att.name}</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">
+                                    <p className="text-xs font-medium text-finx-text truncate">{att.name}</p>
+                                    <p className="text-xs text-finx-text-dim mt-0.5">
                                         {att.mimeType} · {formatBytes(att.sizeBytes)}
                                     </p>
                                 </div>
@@ -228,13 +228,13 @@ function EmailEvidenceCard({ evidence }: { evidence: import("@/lib/types").Email
                                         href={att.signedUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="p-1.5 glass rounded-lg text-slate-400 hover:text-white hover:border-white/20 transition-colors"
+                                        className="p-1.5 glass rounded-lg text-finx-text-muted hover:text-finx-text hover:border-white/20 transition-colors"
                                         title="Open attachment"
                                     >
                                         <ExternalLink size={12} />
                                     </a>
                                 ) : (
-                                    <div className="p-1.5 rounded-lg text-slate-600" title="Access restricted">
+                                    <div className="p-1.5 rounded-lg text-finx-text-dim" title="Access restricted">
                                         <Shield size={12} />
                                     </div>
                                 )}

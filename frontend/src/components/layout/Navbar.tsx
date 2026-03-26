@@ -24,16 +24,16 @@ export default function Navbar() {
     const { setCommandOpen } = useUIStore();
 
     return (
-        <header className="flex items-center justify-between px-5 h-14 border-b border-white/6 glass-strong shrink-0 z-30">
+        <header className="flex items-center justify-between px-5 h-14 border-b border-finx-border glass-strong shrink-0 z-30">
             {/* Brand */}
             <Link href="/dashboard" className="flex items-center gap-2.5 group">
                 <div className="w-7 h-7 gradient-brand rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/30 group-hover:glow-accent transition-all">
                     <Sparkles size={15} className="text-white" />
                 </div>
                 <div>
-                    <span className="text-sm font-bold text-white tracking-tight">Fin</span>
+                    <span className="text-sm font-bold text-finx-text tracking-tight">Fin</span>
                     <span className="text-sm font-bold gradient-text tracking-tight">X</span>
-                    <span className="text-xs text-slate-600 ml-1.5 font-medium hidden sm:inline">
+                    <span className="text-xs text-finx-text-muted ml-1.5 font-medium hidden sm:inline">
                         Invoice Intelligence
                     </span>
                 </div>
@@ -45,14 +45,14 @@ export default function Navbar() {
                     const active = pathname.startsWith(href);
                     return (
                         <Link key={href} href={href}>
-                            <div
-                                className={cn(
-                                    "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
-                                    active
-                                        ? "text-white"
-                                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                                )}
-                            >
+                                <div
+                                    className={cn(
+                                        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+                                        active
+                                            ? "text-finx-bg"
+                                            : "text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover"
+                                    )}
+                                >
                                 {active && (
                                     <motion.div
                                         layoutId="nav-active"
@@ -78,11 +78,11 @@ export default function Navbar() {
                 <Tooltip label="⌘K">
                     <button
                         onClick={() => setCommandOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 glass rounded-xl text-xs text-slate-400 hover:text-slate-200 transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 glass rounded-xl text-xs text-finx-text-muted hover:text-finx-text transition-colors"
                     >
                         <Search size={13} />
                         <span className="hidden sm:inline">Search</span>
-                        <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-white/6 rounded border border-white/10">
+                        <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] bg-finx-surface rounded border border-finx-border text-finx-text-muted">
                             ⌘K
                         </kbd>
                     </button>
@@ -90,7 +90,7 @@ export default function Navbar() {
 
                 {/* Notification Bell */}
                 <Tooltip label="Notifications">
-                    <button className="relative p-2 glass rounded-xl text-slate-400 hover:text-slate-200 transition-colors">
+                    <button className="relative p-2 glass rounded-xl text-finx-text-muted hover:text-finx-text transition-colors">
                         <Bell size={14} />
                         <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-rose-400 rounded-full" />
                     </button>

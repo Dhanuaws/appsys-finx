@@ -61,8 +61,8 @@ export default function FilterPane() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <SlidersHorizontal size={14} className="text-slate-400" />
-                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    <SlidersHorizontal size={14} className="text-finx-text-muted" />
+                    <span className="text-xs font-semibold uppercase tracking-widest text-finx-text-muted">
                         Filters
                     </span>
                 </div>
@@ -75,13 +75,13 @@ export default function FilterPane() {
 
             {/* Search */}
             <div className="relative">
-                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-finx-text-dim" />
                 <input
                     type="text"
                     placeholder="Search invoices…"
                     value={filters.search ?? ""}
                     onChange={(e) => setFilter("search", e.target.value || undefined)}
-                    className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                    className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-finx-text placeholder:text-finx-text-dim focus:outline-none focus:border-indigo-500/50 transition-colors"
                 />
             </div>
 
@@ -95,7 +95,7 @@ export default function FilterPane() {
                             onClick={() => handleDatePreset(p.value)}
                             className={`py-1.5 text-xs rounded-md border transition-all duration-150 ${datePreset === p.value
                                     ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
-                                    : "glass text-slate-400 hover:text-slate-200"
+                                    : "glass text-finx-text-muted hover:text-finx-text"
                                 }`}
                         >
                             {p.label}
@@ -105,7 +105,7 @@ export default function FilterPane() {
                         onClick={() => handleDatePreset("custom")}
                         className={`col-span-3 py-1.5 text-xs rounded-md border flex items-center justify-center gap-1.5 transition-all duration-150 ${datePreset === "custom"
                                 ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
-                                : "glass text-slate-400 hover:text-slate-200"
+                                : "glass text-finx-text-muted hover:text-finx-text"
                             }`}
                     >
                         <Calendar size={11} />
@@ -123,21 +123,21 @@ export default function FilterPane() {
                             className="overflow-hidden space-y-2"
                         >
                             <div>
-                                <label className="text-xs text-slate-500 mb-1 block">From</label>
+                                <label className="text-xs text-finx-text-dim mb-1 block">From</label>
                                 <input
                                     type="date"
                                     value={filters.dateFrom ?? ""}
                                     onChange={(e) => setFilter("dateFrom", e.target.value || undefined)}
-                                    className="w-full glass rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                                    className="w-full glass rounded-lg px-3 py-1.5 text-xs text-finx-text focus:outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs text-slate-500 mb-1 block">To</label>
+                                <label className="text-xs text-finx-text-dim mb-1 block">To</label>
                                 <input
                                     type="date"
                                     value={filters.dateTo ?? ""}
                                     onChange={(e) => setFilter("dateTo", e.target.value || undefined)}
-                                    className="w-full glass rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
+                                    className="w-full glass rounded-lg px-3 py-1.5 text-xs text-finx-text focus:outline-none"
                                 />
                             </div>
                         </motion.div>
@@ -158,7 +158,7 @@ export default function FilterPane() {
                             onClick={() => toggleStatus(s)}
                             className={`py-1.5 px-2 rounded-lg border text-xs flex items-center gap-1.5 transition-all duration-150 ${activeStatusList.includes(s)
                                     ? "border-indigo-500/40 bg-indigo-500/15 text-indigo-200"
-                                    : "glass text-slate-400 hover:text-slate-200"
+                                    : "glass text-finx-text-muted hover:text-finx-text"
                                 }`}
                         >
                             <StatusBadge status={s} />
@@ -174,23 +174,23 @@ export default function FilterPane() {
                 <SectionLabel>Vendor / Entity</SectionLabel>
                 <div className="space-y-2">
                     <div className="relative">
-                        <Building2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <Building2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-finx-text-dim" />
                         <input
                             type="text"
                             placeholder="Filter by vendor…"
                             value={filters.vendorId ?? ""}
                             onChange={(e) => setFilter("vendorId", e.target.value || undefined)}
-                            className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                            className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-finx-text placeholder:text-finx-text-dim focus:outline-none"
                         />
                     </div>
                     <div className="relative">
-                        <Users size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <Users size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-finx-text-dim" />
                         <input
                             type="text"
                             placeholder="Filter by entity…"
                             value={filters.entityId ?? ""}
                             onChange={(e) => setFilter("entityId", e.target.value || undefined)}
-                            className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                            className="w-full glass rounded-lg pl-8 pr-3 py-2 text-xs text-finx-text placeholder:text-finx-text-dim focus:outline-none"
                         />
                     </div>
                 </div>
@@ -217,7 +217,7 @@ export default function FilterPane() {
             {/* Amount Range */}
             <section>
                 <button
-                    className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2"
+                    className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-widest text-finx-text-muted mb-2"
                     onClick={() => setAmountExpanded((v) => !v)}
                 >
                     Amount Range
@@ -235,21 +235,21 @@ export default function FilterPane() {
                             className="overflow-hidden grid grid-cols-2 gap-2"
                         >
                             <div>
-                                <label className="text-xs text-slate-500">Min ($)</label>
+                                <label className="text-xs text-finx-text-dim">Min ($)</label>
                                 <input
                                     type="number" placeholder="0"
                                     value={filters.amountMin ?? ""}
                                     onChange={(e) => setFilter("amountMin", Number(e.target.value) || undefined)}
-                                    className="w-full glass rounded-lg px-2 py-1.5 text-xs mt-1 focus:outline-none text-slate-200"
+                                    className="w-full glass rounded-lg px-2 py-1.5 text-xs mt-1 focus:outline-none text-finx-text"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs text-slate-500">Max ($)</label>
+                                <label className="text-xs text-finx-text-dim">Max ($)</label>
                                 <input
                                     type="number" placeholder="∞"
                                     value={filters.amountMax ?? ""}
                                     onChange={(e) => setFilter("amountMax", Number(e.target.value) || undefined)}
-                                    className="w-full glass rounded-lg px-2 py-1.5 text-xs mt-1 focus:outline-none text-slate-200"
+                                    className="w-full glass rounded-lg px-2 py-1.5 text-xs mt-1 focus:outline-none text-finx-text"
                                 />
                             </div>
                         </motion.div>
@@ -262,7 +262,7 @@ export default function FilterPane() {
             {/* Exception codes */}
             <section>
                 <button
-                    className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2"
+                    className="flex items-center justify-between w-full text-xs font-semibold uppercase tracking-widest text-finx-text-muted mb-2"
                     onClick={() => setExceptionExpanded((v) => !v)}
                 >
                     Exception Codes
@@ -295,7 +295,7 @@ export default function FilterPane() {
 
             {/* Save View */}
             <div className="mt-auto pt-4">
-                <button className="w-full py-2 glass rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:border-white/14 transition-colors flex items-center justify-center gap-2">
+                <button className="w-full py-2 glass rounded-lg text-xs text-finx-text-muted hover:text-finx-text hover:border-finx-border-strong transition-colors flex items-center justify-center gap-2">
                     <Bookmark size={12} />
                     Save this view
                 </button>

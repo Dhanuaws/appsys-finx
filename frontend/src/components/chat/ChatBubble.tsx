@@ -24,7 +24,7 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-center my-2"
             >
-                <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs text-slate-400">
+                <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-full text-xs text-finx-text-muted">
                     <AlertCircle size={12} />
                     {message.content}
                 </div>
@@ -45,13 +45,13 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
             {/* Avatar */}
             <div
                 className={cn(
-                    "shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white mt-0.5",
+                    "shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5",
                     isUser
-                        ? "gradient-brand"
-                        : "bg-indigo-500/20 border border-indigo-500/30"
+                        ? "gradient-brand text-white"
+                        : "bg-finx-surface-hover border border-finx-border text-finx-accent-1"
                 )}
             >
-                {isUser ? <User size={13} /> : <Bot size={13} className="text-indigo-300" />}
+                {isUser ? <User size={13} /> : <Bot size={13} />}
             </div>
 
             {/* Bubble */}
@@ -60,8 +60,8 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
                     className={cn(
                         "rounded-2xl px-4 py-3 text-sm leading-relaxed",
                         isUser
-                            ? "gradient-brand text-white rounded-tr-sm shadow-lg shadow-indigo-500/20"
-                            : "glass text-slate-200 rounded-tl-sm"
+                            ? "gradient-brand text-white rounded-tr-sm glow-accent"
+                            : "glass text-finx-text rounded-tl-sm"
                     )}
                 >
                     {message.isStreaming && !message.content ? (
@@ -95,7 +95,7 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
                 )}
 
                 {/* Timestamp */}
-                <span className="text-xs text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity px-1">
+                <span className="text-xs text-finx-text-dim opacity-0 group-hover:opacity-100 transition-opacity px-1">
                     {formatDateTime(message.timestamp)}
                 </span>
             </div>
@@ -161,19 +161,19 @@ function MarkdownTable({ lines }: { lines: string[] }) {
 
     return (
         <div className="overflow-x-auto my-3 w-full">
-            <table className="min-w-full divide-y divide-indigo-500/20 border border-indigo-500/20 rounded-lg overflow-hidden text-sm">
-                <thead className="bg-indigo-500/10">
+            <table className="min-w-full divide-y divide-finx-border border border-finx-border rounded-lg overflow-hidden text-sm">
+                <thead className="bg-finx-surface">
                     <tr>
                         {headers.map((h, i) => (
-                            <th key={i} className="px-3 py-2 text-left font-semibold text-indigo-300 uppercase tracking-wider">{h}</th>
+                            <th key={i} className="px-3 py-2 text-left font-semibold text-finx-text-muted uppercase tracking-wider">{h}</th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-indigo-500/10">
+                <tbody className="divide-y divide-finx-border border-b border-finx-border">
                     {bodyRows.map((row, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-white/5 transition-colors">
+                        <tr key={rIdx} className="hover:bg-finx-surface-hover transition-colors">
                             {row.map((cell, cIdx) => (
-                                <td key={cIdx} className="px-3 py-2 text-slate-300 whitespace-nowrap">{cell}</td>
+                                <td key={cIdx} className="px-3 py-2 text-finx-text whitespace-nowrap">{cell}</td>
                             ))}
                         </tr>
                     ))}
@@ -252,7 +252,7 @@ function DownloadActions({ citations }: { citations: Citation[] }) {
                 <button
                     onClick={handleBulkDownload}
                     disabled={downloading !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md glass text-xs font-medium text-indigo-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md glass text-xs font-medium text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {downloading === "bulk-zip" ? <Loader2 size={12} className="animate-spin" /> : <Archive size={12} />}
                     Download All Invoices (.zip)
@@ -263,7 +263,7 @@ function DownloadActions({ citations }: { citations: Citation[] }) {
                         key={inv.id}
                         onClick={() => handleIndividualDownload(inv)}
                         disabled={downloading !== null}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md glass text-xs font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md glass text-xs font-medium text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         title={`Download ${inv.label}`}
                     >
                         {downloading === inv.id ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
@@ -290,10 +290,10 @@ const CITATION_ICONS: Record<Citation["type"], React.ReactNode> = {
 };
 
 const CITATION_COLORS: Record<Citation["type"], string> = {
-    invoice: "bg-indigo-500/12 border-indigo-500/25 text-indigo-300 hover:bg-indigo-500/20",
-    email: "bg-violet-500/12 border-violet-500/25 text-violet-300 hover:bg-violet-500/20",
-    attachment: "bg-amber-500/12 border-amber-500/25 text-amber-300 hover:bg-amber-500/20",
-    case: "bg-rose-500/12 border-rose-500/25 text-rose-300 hover:bg-rose-500/20",
+    invoice: "bg-finx-surface border-finx-border text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong",
+    email: "bg-finx-surface border-finx-border text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong",
+    attachment: "bg-finx-surface border-finx-border text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong",
+    case: "bg-finx-surface border-finx-border text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong",
 };
 
 export function CitationBadge({ citation, onClick }: CitationBadgeProps) {
@@ -340,7 +340,7 @@ export function SuggestedPrompts({ onPrompt }: SuggestedPromptsProps) {
                     key={p}
                     type="button"
                     onClick={() => onPrompt(p)}
-                    className="px-3 py-1.5 text-xs glass rounded-full text-slate-400 hover:text-slate-200 hover:border-white/16 transition-all duration-180 cursor-pointer"
+                    className="px-3 py-1.5 text-xs glass rounded-full text-finx-text-muted hover:text-finx-text hover:border-finx-border-strong transition-all duration-180 cursor-pointer"
                 >
                     {p}
                 </button>
@@ -361,8 +361,8 @@ export function ToolCallIndicator({ name }: { name: string }) {
     };
 
     return (
-        <div className="flex items-center gap-2 px-3 py-2 glass rounded-lg text-xs text-slate-400">
-            <span className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center gap-2 px-3 py-2 glass rounded-lg text-xs text-finx-text-muted">
+            <span className="w-3 h-3 border-2 border-finx-accent-1 border-t-transparent rounded-full animate-spin" />
             {labels[name] ?? `Running ${name}…`}
         </div>
     );

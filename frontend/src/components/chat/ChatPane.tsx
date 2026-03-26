@@ -171,7 +171,7 @@ export default function ChatPane() {
     return (
         <div className="flex flex-col h-full">
             {/* Chat header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/6 shrink-0">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-finx-border shrink-0">
                 <div className="flex items-center gap-3">
                     {FINX_NOVA_BADGE}
                     {/* Audit mode toggle */}
@@ -179,7 +179,7 @@ export default function ChatPane() {
                         onClick={() => setIsAuditMode((v) => !v)}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border transition-all duration-200 ${isAuditMode
                             ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                            : "glass text-slate-500 hover:text-slate-300"
+                            : "glass text-finx-text-dim hover:text-finx-text"
                             }`}
                     >
                         <span className="font-medium">
@@ -191,7 +191,7 @@ export default function ChatPane() {
                 {messages.length > 0 && (
                     <button
                         onClick={clearChat}
-                        className="p-1.5 glass rounded-lg text-slate-500 hover:text-slate-300 transition-colors"
+                        className="p-1.5 glass rounded-lg text-finx-text-dim hover:text-finx-text transition-colors"
                         title="Clear chat"
                     >
                         <X size={13} />
@@ -219,10 +219,10 @@ export default function ChatPane() {
                                 </span>
                             </div>
                             <div>
-                                <h2 className="text-xl font-semibold text-white mb-1.5 glow-text">
+                                <h2 className="text-xl font-semibold text-finx-text mb-1.5 glow-text">
                                     FinX Invoice Copilot
                                 </h2>
-                                <p className="text-sm text-slate-400 max-w-xs leading-relaxed">
+                                <p className="text-sm text-finx-text-muted max-w-xs leading-relaxed">
                                     Ask me anything about your invoices — search, detect fraud, retrieve email
                                     evidence, or explore your AP pipeline.
                                 </p>
@@ -233,7 +233,7 @@ export default function ChatPane() {
                                     textareaRef.current?.focus();
                                 }}
                             />
-                            <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                            <div className="flex items-center gap-1.5 text-xs text-finx-text-dim">
                                 <Command size={10} />
                                 <span>K for command bar</span>
                             </div>
@@ -267,13 +267,13 @@ export default function ChatPane() {
                         }}
                         onKeyDown={handleKeyDown}
                         placeholder="Ask about invoices, fraud, or vendors… (Shift+Enter for newline)"
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-600 resize-none focus:outline-none leading-relaxed min-h-[20px] max-h-[160px]"
+                        className="w-full bg-transparent text-sm text-finx-text placeholder:text-finx-text-dim resize-none focus:outline-none leading-relaxed min-h-[20px] max-h-[160px]"
                     />
-                    <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-white/6">
+                    <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-finx-border">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-600">Nova Lite</span>
+                            <span className="text-xs text-finx-text-dim">Nova Lite</span>
                             <span className="text-xs text-slate-700">·</span>
-                            <span className="text-xs text-slate-600">Enter to send</span>
+                            <span className="text-xs text-finx-text-dim">Enter to send</span>
                         </div>
                         <button
                             onClick={handleSend}
