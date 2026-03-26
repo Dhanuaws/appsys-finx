@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useUIStore } from "@/lib/store";
 import { PulseDot } from "@/components/ui/invoice-widgets";
 import { Tooltip } from "@/components/ui/primitives";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV_ITEMS = [
     { href: "/dashboard", icon: MessageSquare, label: "Copilot" },
@@ -20,7 +21,7 @@ const NAV_ITEMS = [
 
 export default function Navbar() {
     const pathname = usePathname();
-    const { setCommandOpen, theme, setTheme } = useUIStore();
+    const { setCommandOpen } = useUIStore();
 
     return (
         <header className="flex items-center justify-between px-5 h-14 border-b border-white/6 glass-strong shrink-0 z-30">
@@ -96,14 +97,7 @@ export default function Navbar() {
                 </Tooltip>
 
                 {/* Theme toggle */}
-                <Tooltip label={theme === "dark" ? "Light mode" : "Dark mode"}>
-                    <button
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="p-2 glass rounded-xl text-slate-400 hover:text-slate-200 transition-colors"
-                    >
-                        {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-                    </button>
-                </Tooltip>
+                <ThemeToggle />
 
                 {/* User avatar */}
                 <div className="w-7 h-7 gradient-brand rounded-full flex items-center justify-center text-white text-xs font-bold">

@@ -11,15 +11,17 @@
  * Backend receives:  POST <BACKEND_URL>/chat/stream  (with Authorization: Bearer <token>)
  */
 import { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
 export const runtime = "edge";  // Edge runtime for true streaming
 
 export async function POST(req: NextRequest) {
-    // In dev mode (DEV_MODE=true on backend), we use a dev token that the backend accepts.
-    // In production, this should be a real Cognito JWT from the NextAuth session.
-    const authHeader = req.headers.get("Authorization") || `Bearer dev-token`;
+    const nextAuthToken = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET });
+    const authHeader = nextAuthToken?.idToken 
+        ? `Bearer ${nextAuthToken.idToken}` 
+        : (req.headers.get("Authorization") || `Bearer dev-token`);
 
     const body = await req.json().catch(() => ({ message: "", audit_mode: false }));
 

@@ -1,36 +1,29 @@
 @import "tailwindcss";
 
 /* ============================================================
-   FinX Design System — Global Tokens & Base Styles
+   FinX Design System — Dynamic 4-Theme Engine
    ============================================================ */
 
+/* 1. MAP TAILWIND ALIASES TO CSS VARIABLES */
 @theme {
-  /* --- Brand Palette --- */
-  --color-finx-bg:            #060a12;
-  --color-finx-surface:       rgba(255,255,255,0.04);
-  --color-finx-surface-hover: rgba(255,255,255,0.07);
-  --color-finx-border:        rgba(255,255,255,0.08);
-  --color-finx-border-strong: rgba(255,255,255,0.16);
+  --color-finx-bg:            var(--theme-bg);
+  --color-finx-surface:       var(--theme-surface);
+  --color-finx-surface-hover: var(--theme-surface-hover);
+  --color-finx-border:        var(--theme-border);
+  --color-finx-border-strong: var(--theme-border-strong);
 
-  --color-finx-accent-1:  #6366f1; /* Indigo */
-  --color-finx-accent-2:  #8b5cf6; /* Violet */
-  --color-finx-accent-glow: rgba(99,102,241,0.35);
+  --color-finx-accent-1:      var(--theme-accent-1);
+  --color-finx-accent-2:      var(--theme-accent-2);
+  --color-finx-accent-glow:   var(--theme-accent-glow);
 
-  --color-finx-text:       #e2e8f0;
-  --color-finx-text-muted: #64748b;
-  --color-finx-text-dim:   #334155;
+  --color-finx-text:          var(--theme-text);
+  --color-finx-text-muted:    var(--theme-text-muted);
+  --color-finx-text-dim:      var(--theme-text-dim);
 
-  /* --- Status Colors --- */
   --color-status-raw:       #f59e0b;
   --color-status-duplicate: #ef4444;
   --color-status-success:   #10b981;
   --color-status-forged:    #f43f5e;
-
-  /* --- Fraud Score --- */
-  --color-fraud-low:    #10b981;
-  --color-fraud-medium: #f59e0b;
-  --color-fraud-high:   #ef4444;
-  --color-fraud-critical:#f43f5e;
 
   /* --- Motion --- */
   --ease-spring:  cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -40,85 +33,147 @@
   --duration-slow:   350ms;
   --duration-panel:  400ms;
 
-  /* --- Typography --- */
   --font-sans:  "Inter", "SF Pro Display", system-ui, sans-serif;
   --font-mono:  "JetBrains Mono", "Fira Code", ui-monospace, monospace;
   --font-display: "Inter", "SF Pro Display", system-ui, sans-serif;
 
-  /* --- Radii --- */
   --radius-card: 16px;
   --radius-chip: 8px;
   --radius-btn:  10px;
 }
 
-/* ============================================================
-   Base Reset & Fonts
-   ============================================================ */
+/* 2. DEFINE THE 4 THEME PALETTES */
 
+:root, [data-theme="neo"] {
+  /* Neo Dark (Default, Tech Gloss) */
+  --theme-bg: #060a12;
+  --theme-surface: rgba(255, 255, 255, 0.04);
+  --theme-surface-hover: rgba(255, 255, 255, 0.07);
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border-strong: rgba(255, 255, 255, 0.16);
+  --theme-accent-1: #6366f1;
+  --theme-accent-2: #8b5cf6;
+  --theme-accent-glow: rgba(99, 102, 241, 0.35);
+  --theme-text: #e2e8f0;
+  --theme-text-muted: #64748b;
+  --theme-text-dim: #334155;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  /* Elegant Light (Clean, High Contrast, Minimal) */
+  --theme-bg: #fafafa;
+  --theme-surface: #ffffff;
+  --theme-surface-hover: #f1f5f9;
+  --theme-border: #e2e8f0;
+  --theme-border-strong: #cbd5e1;
+  --theme-accent-1: #0f172a; /* Slate 900 */
+  --theme-accent-2: #334155; /* Slate 700 */
+  --theme-accent-glow: rgba(15, 23, 42, 0.05); /* very soft shadow */
+  --theme-text: #020617;
+  --theme-text-muted: #475569;
+  --theme-text-dim: #94a3b8;
+  color-scheme: light;
+}
+
+[data-theme="midnight"] {
+  /* Nordic Midnight (Deep Matte Slate, Professional Dark) */
+  --theme-bg: #0f172a;
+  --theme-surface: #1e293b;
+  --theme-surface-hover: #334155;
+  --theme-border: #334155;
+  --theme-border-strong: #475569;
+  --theme-accent-1: #38bdf8; /* Soft Sky Blue */
+  --theme-accent-2: #818cf8; /* Soft Indigo */
+  --theme-accent-glow: rgba(56, 189, 248, 0.15);
+  --theme-text: #f8fafc;
+  --theme-text-muted: #94a3b8;
+  --theme-text-dim: #475569;
+  color-scheme: dark;
+}
+
+[data-theme="classic"] {
+  /* Corporate Monochrome (Brutalist Black & White) */
+  --theme-bg: #000000;
+  --theme-surface: #111111;
+  --theme-surface-hover: #222222;
+  --theme-border: #333333;
+  --theme-border-strong: #555555;
+  --theme-accent-1: #ffffff;
+  --theme-accent-2: #dddddd;
+  --theme-accent-glow: transparent;
+  --theme-text: #ffffff;
+  --theme-text-muted: #888888;
+  --theme-text-dim: #444444;
+  color-scheme: dark;
+}
+
+
+/* 3. BASE RESETS */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
-
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-
   body {
-    background-color: var(--color-finx-bg);
-    color: var(--color-finx-text);
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
     font-family: var(--font-sans);
     min-height: 100dvh;
     overflow: hidden;
+    transition: background-color 300ms var(--ease-smooth), color 300ms var(--ease-smooth);
   }
-
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.12);
+    background: var(--theme-border-strong);
     border-radius: 99px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
-
+  ::-webkit-scrollbar-thumb:hover { background: var(--theme-text-muted); }
   /* Selection */
   ::selection {
-    background: rgba(99,102,241,0.4);
-    color: white;
+    background: var(--theme-accent-1);
+    color: var(--theme-bg);
   }
-
-  /* Focus outline */
   :focus-visible {
-    outline: 2px solid var(--color-finx-accent-1);
+    outline: 2px solid var(--theme-accent-1);
     outline-offset: 2px;
     border-radius: 4px;
   }
 }
 
-/* ============================================================
-   Utility: Glassmorphism
-   ============================================================ */
-
+/* 4. UTILITIES (ADAPTED FOR THEMES) */
 @layer utilities {
   .glass {
-    background: var(--color-finx-surface);
+    background: var(--theme-surface);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid var(--color-finx-border);
+    border: 1px solid var(--theme-border);
   }
 
   .glass-strong {
-    background: rgba(255,255,255,0.06);
+    background: var(--theme-surface-hover);
     backdrop-filter: blur(28px) saturate(200%);
     -webkit-backdrop-filter: blur(28px) saturate(200%);
-    border: 1px solid var(--color-finx-border-strong);
+    border: 1px solid var(--theme-border-strong);
   }
 
+  /* In light theme, gradient brand just becomes solid dark slate */
   .gradient-brand {
-    background: linear-gradient(135deg, var(--color-finx-accent-1), var(--color-finx-accent-2));
+    background: linear-gradient(135deg, var(--theme-accent-1), var(--theme-accent-2));
   }
 
   .gradient-text {
+    background: linear-gradient(135deg, var(--theme-accent-1), var(--theme-accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  [data-theme="neo"] .gradient-text {
     background: linear-gradient(135deg, #818cf8, #c084fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -126,82 +181,56 @@
   }
 
   .glow-accent {
-    box-shadow: 0 0 20px var(--color-finx-accent-glow),
-                0 0 60px rgba(99,102,241,0.1);
+    box-shadow: 0 0 20px var(--theme-accent-glow),
+                0 0 60px var(--theme-accent-glow);
   }
 
   .glow-text {
-    text-shadow: 0 0 20px rgba(129,140,248,0.5);
+    text-shadow: 0 0 20px var(--theme-accent-glow);
   }
 
-  /* Shimmer / skeleton animation */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgba(255,255,255,0.04) 0%,
-      rgba(255,255,255,0.10) 50%,
-      rgba(255,255,255,0.04) 100%
+      var(--theme-surface) 0%,
+      var(--theme-border) 50%,
+      var(--theme-surface) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
 
-  /* Typing cursor */
   .typing-cursor::after {
     content: "▋";
     animation: blink 1s step-end infinite;
     opacity: 0.8;
-    color: var(--color-finx-accent-1);
+    color: var(--theme-accent-1);
   }
 }
 
-/* ============================================================
-   Keyframes
-   ============================================================ */
-
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(24px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 8px rgba(99,102,241,0.3); }
-  50%       { box-shadow: 0 0 24px rgba(99,102,241,0.6); }
-}
-
-/* ============================================================
-   Background gradient mesh
-   ============================================================ */
-
+/* 5. MESH BACKGROUND (Dynamically reacts to theme) */
 .bg-mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 20%, var(--theme-accent-glow) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 75%, var(--theme-surface-hover) 0%, transparent 55%),
+    var(--theme-bg);
+  transition: background 400ms var(--ease-smooth);
+}
+
+/* Hardcode specific bright hues for Neo only */
+[data-theme="neo"] .bg-mesh {
   background:
     radial-gradient(ellipse 80% 60% at 15% 20%, rgba(99,102,241,0.07) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 85% 75%, rgba(139,92,246,0.06) 0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 50% 50%, rgba(244,63,94,0.03) 0%, transparent 60%),
-    #060a12;
+    var(--theme-bg);
 }
+
+/* 6. KEYFRAMES */
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 8px var(--theme-accent-glow); } 50% { box-shadow: 0 0 24px var(--theme-border-strong); } }

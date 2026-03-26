@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./Providers";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -30,7 +31,7 @@ export default function RootLayout({
                 <meta name="theme-color" content="#060a12" />
             </head>
             <body className="bg-mesh antialiased">
-                {children}
+                <Providers>{children}</Providers>
             </body>
         </html>
     );

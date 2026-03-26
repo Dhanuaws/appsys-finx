@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 export const runtime = "edge";
 
@@ -10,7 +11,10 @@ export async function GET(req: NextRequest) {
         return new Response(JSON.stringify({ error: "s3_key is required" }), { status: 400 });
     }
 
-    const authHeader = req.headers.get("Authorization") || `Bearer dev-token`;
+    const nextAuthToken = await getToken({ req: req as any, secret: process.env.NEXTAUTH_SECRET });
+    const authHeader = nextAuthToken?.idToken 
+        ? `Bearer ${nextAuthToken.idToken}` 
+        : (req.headers.get("Authorization") || `Bearer dev-token`);
 
     try {
         const res = await fetch(`${BACKEND_URL}/evidence/attachment/signed-url?s3_key=${encodeURIComponent(s3Key)}`, {
