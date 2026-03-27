@@ -278,6 +278,53 @@ def create_fraud_case(actor: ActorContext, invoice_id: str, severity: str, reaso
         raise
 
     return case
+
+
+def update_fraud_case(actor: ActorContext, case_id: str, updates: dict) -> dict:
+    """Update mutable fields of a fraud case. Enforces tenant ownership."""
+    from datetime import datetime, timezone
+
+    settings = get_settings()
+    db = _get_resource()
+    table = db.Table(settings.table_fraud_cases)
+
+    # Verify case belongs to this tenant
+    try:
+        result = table.get_item(Key={"caseId": case_id})
+    except ClientError as e:
+        log.error("GetItem FinXFraudCases failed: %s", e)
+        raise
+
+    item = result.get("Item")
+    if not item or item.get("tenantId") != actor.tenant_id:
+        raise ValueError(f"Case {case_id} not found or access denied.")
+
+    allowed_fields = {"status", "severity", "assignee", "resolutionNotes"}
+    expr_parts = ["#updatedAt = :updatedAt"]
+    expr_names = {"#updatedAt": "updatedAt"}
+    expr_values: dict = {":updatedAt": datetime.now(timezone.utc).isoformat()}
+
+    for key, value in updates.items():
+        if key in allowed_fields and value is not None:
+            expr_parts.append(f"#{key} = :{key}")
+            expr_names[f"#{key}"] = key
+            expr_values[f":{key}"] = value
+
+    try:
+        response = table.update_item(
+            Key={"caseId": case_id},
+            UpdateExpression="SET " + ", ".join(expr_parts),
+            ExpressionAttributeNames=expr_names,
+            ExpressionAttributeValues=expr_values,
+            ReturnValues="ALL_NEW",
+        )
+    except ClientError as e:
+        log.error("UpdateItem FinXFraudCases failed: %s", e)
+        raise
+
+    return response.get("Attributes", {})
+
+
 # ── Audit Logs ────────────────────────────────────────────────
 def list_audit_logs(
     actor: ActorContext,

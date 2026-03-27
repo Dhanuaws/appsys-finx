@@ -36,11 +36,30 @@ export default function FilterPane() {
 
     const activeStatusList = (filters.status ?? []) as InvoiceStatus[];
 
+    // SUCCESS, FORGED, DUPLICATE are mutually exclusive — only one at a time.
+    // RAW can be combined freely with any of the three.
+    const EXCLUSIVE_STATUSES: InvoiceStatus[] = ["SUCCESS", "FORGED", "DUPLICATE"];
+
     const toggleStatus = (s: InvoiceStatus) => {
-        const next = activeStatusList.includes(s)
-            ? activeStatusList.filter((x) => x !== s)
-            : [...activeStatusList, s];
-        setFilter("status", next.length ? next : undefined);
+        if (s === "RAW") {
+            const next = activeStatusList.includes("RAW")
+                ? activeStatusList.filter((x) => x !== "RAW")
+                : [...activeStatusList, "RAW"];
+            setFilter("status", next.length ? next : undefined);
+        } else {
+            // Clicking an exclusive status: deselect if already active,
+            // otherwise select it and clear the other two exclusive statuses.
+            if (activeStatusList.includes(s)) {
+                const next = activeStatusList.filter((x) => x !== s);
+                setFilter("status", next.length ? next : undefined);
+            } else {
+                const next = [
+                    ...activeStatusList.filter((x) => !EXCLUSIVE_STATUSES.includes(x)),
+                    s,
+                ];
+                setFilter("status", next.length ? next : undefined);
+            }
+        }
     };
 
     const toggleException = (code: string) => {

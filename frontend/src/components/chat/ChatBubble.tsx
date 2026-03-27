@@ -316,12 +316,13 @@ export function CitationBadge({ citation, onClick }: CitationBadgeProps) {
 
 // ── Suggested prompts ─────────────────────────────────────────
 const SUGGESTED_PROMPTS = [
-    "Show me forged invoices",
-    "Duplicates from last 30 days",
-    "Top vendors by invoice volume",
+    "Show me all the processed invoices today",
+    "Are there any duplicated invoices today",
+    "Show me all the processed invoices this week",
+    "Are there any duplicated invoices this week",
     "Show unprocessed raw invoices",
     "Invoices flagged with GST mismatch",
-    "Fraud station — open high risk cases",
+    "Top vendors by invoices",
 ];
 
 interface SuggestedPromptsProps {

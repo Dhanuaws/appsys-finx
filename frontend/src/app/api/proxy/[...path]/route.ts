@@ -1,48 +1,78 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-export const runtime = 'edge';
+export const runtime = "edge";
+
+const BACKEND_URL = process.env.FINX_API_URL || process.env.BACKEND_URL || "http://localhost:8000";
+
+async function getAuthHeader(req: NextRequest): Promise<string> {
+    const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    return session?.id_token ? `Bearer ${session.id_token}` : "Bearer dev-token";
+}
+
+function buildTargetUrl(path: string[], req: NextRequest): string {
+    const base = `${BACKEND_URL}/${path.join("/")}`;
+    const search = req.nextUrl.searchParams.toString();
+    return search ? `${base}?${search}` : base;
+}
+
+export async function GET(
+    req: NextRequest,
+    { params }: { params: { path: string[] } }
+) {
+    const auth = await getAuthHeader(req);
+    const url = buildTargetUrl(params.path, req);
+    try {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: { Authorization: auth },
+        });
+        const data = await response.json();
+        return NextResponse.json(data, { status: response.status });
+    } catch (error) {
+        console.error("Proxy GET error:", error);
+        return NextResponse.json({ error: "Proxy error" }, { status: 500 });
+    }
+}
 
 export async function POST(
     req: NextRequest,
     { params }: { params: { path: string[] } }
 ) {
-    const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
-    // Validate authentication explicitly
-    if (!session || !session.id_token) {
-        return NextResponse.json({ error: "Unauthorized. Missing IAM session." }, { status: 401 });
-    }
-
-    const { path } = params;
-    const targetPath = path.join("/");
-    const apiUrl = `${process.env.FINX_API_URL || "http://localhost:8000"}/${targetPath}`;
-
+    const auth = await getAuthHeader(req);
+    const url = buildTargetUrl(params.path, req);
     try {
         const body = await req.json();
-
-        // Proxy the request to the FastAPI backend with the securely retrieved Cognito ID Token
-        const response = await fetch(apiUrl, {
+        const response = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${session.id_token}`,
-            },
+            headers: { "Content-Type": "application/json", Authorization: auth },
             body: JSON.stringify(body),
         });
-
         const data = await response.json();
+        return NextResponse.json(data, { status: response.status });
+    } catch (error) {
+        console.error("Proxy POST error:", error);
+        return NextResponse.json({ error: "Proxy error" }, { status: 500 });
+    }
+}
 
-        if (!response.ok) {
-            return NextResponse.json(data, { status: response.status });
-        }
-
-        return NextResponse.json(data);
-    } catch (error: any) {
-        console.error("Proxy Error:", error);
-        return NextResponse.json(
-            { error: "Internal Server Proxy Error" },
-            { status: 500 }
-        );
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: { path: string[] } }
+) {
+    const auth = await getAuthHeader(req);
+    const url = buildTargetUrl(params.path, req);
+    try {
+        const body = await req.json();
+        const response = await fetch(url, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: auth },
+            body: JSON.stringify(body),
+        });
+        const data = await response.json();
+        return NextResponse.json(data, { status: response.status });
+    } catch (error) {
+        console.error("Proxy PATCH error:", error);
+        return NextResponse.json({ error: "Proxy error" }, { status: 500 });
     }
 }

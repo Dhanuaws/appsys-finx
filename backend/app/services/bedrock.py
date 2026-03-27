@@ -330,21 +330,35 @@ async def stream_chat(
     max_turns = 6  # Safety: max tool-call loops
 
     for turn in range(max_turns):
-        try:
-            response = bedrock.converse_stream(
-                modelId=settings.bedrock_model_id,
-                system=[{"text": system_prompt}],
-                messages=messages,
-                toolConfig={"tools": _TOOLS},
-                inferenceConfig={
-                    "maxTokens": settings.max_tokens,
-                    "temperature": 0.1,   # Low temp for factual AP work
-                    "topP": 0.9,
-                },
-            )
-        except ClientError as e:
-            log.error("Bedrock converse_stream failed: %s", e)
-            yield {"type": "chunk", "text": "I'm having trouble reaching the AI service. Please try again."}
+        # Allow one automatic retry on expired AWS credentials.
+        response = None
+        for attempt in range(2):
+            try:
+                response = bedrock.converse_stream(
+                    modelId=settings.bedrock_model_id,
+                    system=[{"text": system_prompt}],
+                    messages=messages,
+                    toolConfig={"tools": _TOOLS},
+                    inferenceConfig={
+                        "maxTokens": settings.max_tokens,
+                        "temperature": 0.1,   # Low temp for factual AP work
+                        "topP": 0.9,
+                    },
+                )
+                break  # Success — exit retry loop
+            except ClientError as e:
+                error_code = e.response.get("Error", {}).get("Code", "")
+                if error_code in ("ExpiredTokenException", "ExpiredToken") and attempt == 0:
+                    log.warning("AWS token expired — rebuilding credentials and retrying (attempt %d).", attempt + 1)
+                    bedrock = _get_bedrock()  # Force fresh credential lookup
+                    continue
+                log.error("Bedrock converse_stream failed: %s", e)
+                yield {"type": "chunk", "text": "Apologies! I am unable to fetch the details at this moment. Please try again shortly."}
+                yield {"type": "done"}
+                return
+
+        if response is None:
+            yield {"type": "chunk", "text": "Apologies! I am unable to fetch the details at this moment. Please try again shortly."}
             yield {"type": "done"}
             return
 

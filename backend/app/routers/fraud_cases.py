@@ -21,6 +21,13 @@ class CreateCaseRequest(BaseModel):
     reason: str = ""
 
 
+class UpdateCaseRequest(BaseModel):
+    status: Optional[str] = None       # OPEN | IN_REVIEW | RESOLVED
+    severity: Optional[str] = None     # LOW | MEDIUM | HIGH | CRITICAL
+    assignee: Optional[str] = None
+    resolution_notes: Optional[str] = None
+
+
 @router.get("")
 def list_cases(
     status: Optional[str] = Query(default=None),
@@ -29,6 +36,26 @@ def list_cases(
     """List fraud cases for the authenticated tenant."""
     cases = db_svc.list_fraud_cases(actor, status_filter=status)
     return {"items": cases, "count": len(cases)}
+
+
+@router.patch("/{case_id}")
+def update_case(
+    case_id: str,
+    body: UpdateCaseRequest,
+    actor: ActorContext = Depends(get_actor),
+):
+    """Update status, severity, assignee, or resolution notes of a fraud case."""
+    updates = {
+        "status": body.status,
+        "severity": body.severity,
+        "assignee": body.assignee,
+        "resolutionNotes": body.resolution_notes,
+    }
+    try:
+        updated = db_svc.update_fraud_case(actor, case_id, updates)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return updated
 
 
 @router.post("")
