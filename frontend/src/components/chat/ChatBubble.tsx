@@ -316,6 +316,7 @@ export function CitationBadge({ citation, onClick }: CitationBadgeProps) {
 
 // ── Suggested prompts ─────────────────────────────────────────
 const SUGGESTED_PROMPTS = [
+    "Show me all processed invoices so far",
     "Show me all the processed invoices today",
     "Are there any duplicated invoices today",
     "Show me all the processed invoices this week",

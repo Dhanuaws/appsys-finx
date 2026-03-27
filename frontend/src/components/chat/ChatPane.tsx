@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, Sparkles, X, Command } from "lucide-react";
+import { Send, Mic, Sparkles, X, Command, Home } from "lucide-react";
 import { ChatBubble, SuggestedPrompts } from "@/components/chat/ChatBubble";
 import { useChatStore, useEvidenceStore } from "@/lib/store";
 import type { Citation } from "@/lib/types";
@@ -193,9 +193,9 @@ export default function ChatPane() {
                     <button
                         onClick={clearChat}
                         className="p-1.5 glass rounded-lg text-finx-text-dim hover:text-finx-text transition-colors"
-                        title="Clear chat"
+                        title="Back to home"
                     >
-                        <X size={13} />
+                        <Home size={13} />
                     </button>
                 )}
             </div>
