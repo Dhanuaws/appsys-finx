@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import {
     Sparkles, MessageSquare, ShieldAlert, Bell,
     Settings, Command, Search, Sun, Moon, LayoutDashboard,
@@ -22,6 +23,12 @@ const NAV_ITEMS = [
 export default function Navbar() {
     const pathname = usePathname();
     const { setCommandOpen } = useUIStore();
+    const { data: session } = useSession();
+    const userInitial = session?.user?.name
+        ? session.user.name.charAt(0).toUpperCase()
+        : session?.user?.email
+        ? session.user.email.charAt(0).toUpperCase()
+        : "D"; // DEV fallback
 
     return (
         <header className="flex items-center justify-between px-5 h-14 border-b border-finx-border glass-strong shrink-0 z-30">
@@ -100,9 +107,11 @@ export default function Navbar() {
                 <ThemeToggle />
 
                 {/* User avatar */}
-                <div className="w-7 h-7 gradient-brand rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    A
-                </div>
+                <Tooltip label={session?.user?.email ?? session?.user?.name ?? "Dev mode"}>
+                    <div className="w-7 h-7 gradient-brand rounded-full flex items-center justify-center text-white text-xs font-bold cursor-default select-none">
+                        {userInitial}
+                    </div>
+                </Tooltip>
             </div>
         </header>
     );

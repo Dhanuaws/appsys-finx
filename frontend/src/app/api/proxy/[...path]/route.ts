@@ -5,6 +5,8 @@ export const runtime = "edge";
 
 const BACKEND_URL = process.env.FINX_API_URL || process.env.BACKEND_URL || "http://localhost:8000";
 
+type Context = { params: Promise<{ path: string[] }> };
+
 async function getAuthHeader(req: NextRequest): Promise<string> {
     const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     return session?.id_token ? `Bearer ${session.id_token}` : "Bearer dev-token";
@@ -16,12 +18,10 @@ function buildTargetUrl(path: string[], req: NextRequest): string {
     return search ? `${base}?${search}` : base;
 }
 
-export async function GET(
-    req: NextRequest,
-    { params }: { params: { path: string[] } }
-) {
+export async function GET(req: NextRequest, context: Context) {
+    const { path } = await context.params;
     const auth = await getAuthHeader(req);
-    const url = buildTargetUrl(params.path, req);
+    const url = buildTargetUrl(path, req);
     try {
         const response = await fetch(url, {
             method: "GET",
@@ -35,12 +35,10 @@ export async function GET(
     }
 }
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: { path: string[] } }
-) {
+export async function POST(req: NextRequest, context: Context) {
+    const { path } = await context.params;
     const auth = await getAuthHeader(req);
-    const url = buildTargetUrl(params.path, req);
+    const url = buildTargetUrl(path, req);
     try {
         const body = await req.json();
         const response = await fetch(url, {
@@ -56,12 +54,10 @@ export async function POST(
     }
 }
 
-export async function PATCH(
-    req: NextRequest,
-    { params }: { params: { path: string[] } }
-) {
+export async function PATCH(req: NextRequest, context: Context) {
+    const { path } = await context.params;
     const auth = await getAuthHeader(req);
-    const url = buildTargetUrl(params.path, req);
+    const url = buildTargetUrl(path, req);
     try {
         const body = await req.json();
         const response = await fetch(url, {

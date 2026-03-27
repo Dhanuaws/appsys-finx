@@ -101,11 +101,12 @@ export default function ChatPane() {
         []
     );
 
-    const handleSend = useCallback(async () => {
-        const text = input.trim();
+    const handleSend = useCallback(async (overrideText?: string) => {
+        const text = (overrideText ?? input).trim();
         if (!text) return;
 
-        setInput("");
+        if (!overrideText) setInput("");
+        else setInput("");
         textareaRef.current?.focus();
 
         const historyForApi = messages
@@ -162,7 +163,7 @@ export default function ChatPane() {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
-            handleSend();
+            handleSend(undefined);
         }
     };
 
@@ -229,8 +230,7 @@ export default function ChatPane() {
                             </div>
                             <SuggestedPrompts
                                 onPrompt={(p) => {
-                                    setInput(p);
-                                    textareaRef.current?.focus();
+                                    handleSend(p);
                                 }}
                             />
                             <div className="flex items-center gap-1.5 text-xs text-finx-text-dim">
