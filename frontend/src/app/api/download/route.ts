@@ -1,8 +1,6 @@
 import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-export const runtime = "edge";
-
 const BACKEND_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_FINX_API_URL || "http://localhost:8000";
 
 export async function GET(req: NextRequest) {

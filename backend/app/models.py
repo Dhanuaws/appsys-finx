@@ -27,30 +27,81 @@ class ActorContext(BaseModel):
 
 # ── Audit Layer ────────────────────────────────────────────────
 class AuditRecord(BaseModel):
-    audit_id: str = Field(alias="AuditId")
-    event_type: str = Field(alias="EventType")
-    document_hash: Optional[str] = Field(alias="DocumentHash", default=None)
-    tenant_id: str = Field(alias="tenantId", default="")
-    status: str = Field(default="LOGGED")
-    reason: Optional[str] = None
-    message: str = ""
-    processed_at: str = Field(alias="ProcessedAt", default="")
-    metadata: dict = {}
+    audit_id: str = ""
+    decision: str = ""           # ACCEPTED / REJECTED / FAILED
+    reject_layer: str = ""       # LAYER1_HASH / LAYER2_CLASSIFICATION / etc.
+    reject_code: str = ""        # REJECTED_DUPLICATE_HASH / REJECTED_NON_INVOICE_DOCUMENT / etc.
+    reject_reason: str = ""      # Human-readable reason
+    invoice_number: str = ""
+    supplier: str = ""
+    supplier_site: str = ""
+    invoice_amount: str = ""
+    invoice_currency: str = ""
+    document_hash: Optional[str] = None
+    business_key: str = ""
+    source_file_name: str = ""
+    raw_email_s3_path: str = ""
+    silver_s3_path: str = ""
+    message_id: str = ""
+    sender: str = ""
+    subject: str = ""
+    detected_at: str = ""
+    tenant_id: str = ""
+    confidence: float = 1.0
 
     model_config = {"populate_by_name": True}
 
     @classmethod
+    def _clean_reject_reason(cls, raw: str) -> str:
+        """Truncate and humanise raw reject reasons (strips Bedrock/AWS exception noise)."""
+        if not raw:
+            return ""
+        # Strip common AWS exception prefixes
+        for prefix in (
+            "An error occurred (ValidationException) when calling the Converse operation: ",
+            "An error occurred (ValidationException) when calling the InvokeModel operation: ",
+            "Nova invocation failed: An error occurred",
+            "Nova failed: An error occurred",
+        ):
+            if raw.startswith(prefix):
+                raw = raw[len(prefix):]
+                break
+        # If still a long technical string, truncate at sentence/clause boundary
+        if len(raw) > 160:
+            # Try to cut at a meaningful boundary
+            for sep in (". ", "; ", " — ", " - "):
+                idx = raw.find(sep, 80)
+                if 80 < idx < 200:
+                    raw = raw[:idx]
+                    break
+            else:
+                raw = raw[:160] + "…"
+        return raw.strip()
+
+    @classmethod
     def from_dynamo(cls, item: dict) -> "AuditRecord":
         return cls(
-            AuditId=item.get("AuditId", ""),
-            EventType=item.get("EventType", ""),
-            DocumentHash=item.get("DocumentHash"),
-            tenantId=item.get("tenantId", ""),
-            status=item.get("status", "LOGGED"),
-            reason=item.get("reason"),
-            message=item.get("message", ""),
-            ProcessedAt=item.get("ProcessedAt", ""),
-            metadata=item.get("metadata", {})
+            audit_id=item.get("AuditId", ""),
+            decision=item.get("Decision", ""),
+            reject_layer=item.get("RejectLayer", ""),
+            reject_code=item.get("RejectCode", ""),
+            reject_reason=cls._clean_reject_reason(item.get("RejectReason", "")),
+            invoice_number=item.get("InvoiceNumber", ""),
+            supplier=item.get("Supplier", ""),
+            supplier_site=item.get("SupplierSite", ""),
+            invoice_amount=str(item.get("InvoiceAmount", "")),
+            invoice_currency=item.get("InvoiceCurrency", ""),
+            document_hash=item.get("DocumentHash"),
+            business_key=item.get("BusinessKey", ""),
+            source_file_name=item.get("SourceFileName", ""),
+            raw_email_s3_path=item.get("RawEmailS3Path", ""),
+            silver_s3_path=item.get("SilverS3Path", ""),
+            message_id=item.get("MessageID", ""),
+            sender=item.get("Sender", ""),
+            subject=item.get("Subject", ""),
+            detected_at=item.get("DetectedAt", ""),
+            tenant_id=item.get("tenantId", ""),
+            confidence=float(item.get("Confidence", 1.0)),
         )
 
 
@@ -90,6 +141,35 @@ class Invoice(BaseModel):
     @classmethod
     def from_dynamo(cls, item: dict) -> "Invoice":
         """Build from raw DynamoDB item."""
+        # Resolve status: explicit 'status' field takes priority, then map ProcessingStatus
+        raw_status = item.get("status", "")
+        if not raw_status:
+            ps = item.get("ProcessingStatus", "")
+            if ps == "Dynamo-Inserted":
+                raw_status = "SUCCESS"
+            elif ps in ("DUPLICATE",):
+                raw_status = "DUPLICATE"
+            elif ps in ("FORGED",):
+                raw_status = "FORGED"
+            else:
+                raw_status = "RAW"
+
+        # Parse invoice lines if present
+        raw_lines = item.get("invoiceLines", [])
+        parsed_lines = []
+        for i, ln in enumerate(raw_lines if isinstance(raw_lines, list) else []):
+            try:
+                parsed_lines.append(InvoiceLine(
+                    line_number=int(ln.get("LineNumber", i + 1)),
+                    line_type=ln.get("LineType", "Item"),
+                    line_amount=float(ln.get("LineAmount", 0)),
+                    description=ln.get("Description", ""),
+                    accounting_date=ln.get("AccountingDate", ""),
+                    tax_control_amount=float(ln.get("TaxControlAmount", 0)),
+                ))
+            except Exception:
+                continue
+
         return cls(
             DocumentHash=item.get("DocumentHash", ""),
             InvoiceNumber=item.get("InvoiceNumber", ""),
@@ -97,8 +177,8 @@ class Invoice(BaseModel):
             LegalEntity=item.get("LegalEntity", ""),
             InvoiceDate=item.get("InvoiceDate", ""),
             InvoiceAmount=float(item.get("InvoiceAmount", 0)),
-            Currency=item.get("Currency", "USD"),
-            status=item.get("status", "RAW"),
+            Currency=item.get("InvoiceCurrency", item.get("Currency", "USD")),
+            status=raw_status,
             exception_codes=item.get("exceptionCodes", []),
             duplicate_of_invoice_id=item.get("duplicateOfInvoiceId"),
             fraud_score=float(item["fraudScore"]) if item.get("fraudScore") else None,
@@ -108,6 +188,7 @@ class Invoice(BaseModel):
             processed_at=item.get("ProcessedAt", item.get("processedAt", "")),
             s3_location=item.get("S3_Location", item.get("s3Location")),
             tenant_id=item.get("tenantId", ""),
+            invoice_lines=parsed_lines,
         )
 
 
@@ -183,6 +264,7 @@ class InvoiceFilters(BaseModel):
     status: Optional[list[Literal["RAW", "DUPLICATE", "SUCCESS", "FORGED"]]] = None
     vendor_id: Optional[str] = None
     entity_id: Optional[str] = None
+    invoice_number: Optional[str] = None   # search by invoice number (partial match)
     fraud_score_min: Optional[float] = Field(default=None, ge=0, le=100)
     amount_min: Optional[float] = Field(default=None, ge=0)
     amount_max: Optional[float] = Field(default=None, ge=0)

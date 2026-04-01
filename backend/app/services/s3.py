@@ -55,6 +55,45 @@ def generate_signed_url(actor: ActorContext, s3_key: str) -> Optional[str]:
     except ClientError as e:
         log.error("Failed to generate signed URL for %s: %s", s3_key, e)
         return None
+
+
+def generate_raw_signed_url(actor: ActorContext, s3_key: str) -> Optional[str]:
+    """
+    Generate a pre-signed URL for any key in the bucket (email evidence).
+    No tenant-prefix check — used for raw email paths that predate tenant-scoping.
+    RBAC guard: requires canViewEmails.
+    Handles full s3://bucket/key URIs — uses the bucket embedded in the URI
+    rather than settings.s3_bucket, so cross-bucket references work correctly.
+    """
+    if not actor.can_view_emails:
+        return None
+    settings = get_settings()
+    bucket = settings.s3_bucket  # default
+
+    # Extract bucket AND key from full s3:// URI — do NOT discard the bucket name
+    if s3_key.startswith("s3://"):
+        # s3://bucket-name/key/path → bucket="bucket-name", key="key/path"
+        without_scheme = s3_key[5:]  # strip "s3://"
+        slash_idx = without_scheme.find("/")
+        if slash_idx != -1:
+            bucket = without_scheme[:slash_idx]
+            s3_key = without_scheme[slash_idx + 1:]
+        else:
+            s3_key = without_scheme  # malformed, fall back
+
+    if not s3_key:
+        return None
+
+    s3 = _get_s3()
+    try:
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": s3_key},
+            ExpiresIn=settings.s3_signed_url_ttl,
+        )
+        return url
+    except ClientError as e:
+        log.error("Failed to generate raw signed URL for s3://%s/%s: %s", bucket, s3_key, e)
         return None
 
 
@@ -273,6 +312,56 @@ def _parse_json_email(
         ))
 
     return body_text, attachments
+
+
+def get_email_body_from_raw_path(actor: ActorContext, s3_raw_path: str) -> Optional[str]:
+    """
+    Fetch and extract the plain-text body from a raw .eml stored at s3_raw_path.
+    Handles full s3://bucket/key URIs. RBAC-gated.
+    """
+    if not actor.can_view_emails or not s3_raw_path:
+        return None
+
+    settings = get_settings()
+    s3 = _get_s3()
+    bucket = settings.s3_bucket
+    key = s3_raw_path
+
+    if s3_raw_path.startswith("s3://"):
+        without_scheme = s3_raw_path[5:]
+        slash_idx = without_scheme.find("/")
+        if slash_idx != -1:
+            bucket = without_scheme[:slash_idx]
+            key = without_scheme[slash_idx + 1:]
+        else:
+            key = without_scheme
+
+    if not key:
+        return None
+
+    try:
+        obj = s3.get_object(Bucket=bucket, Key=key)
+        raw = obj["Body"].read()
+    except ClientError as e:
+        log.warning("Could not fetch raw email body from %s/%s: %s", bucket, key, e)
+        return None
+
+    if key.endswith(".json"):
+        try:
+            data = json.loads(raw)
+            return data.get("body") or data.get("bodyText")
+        except json.JSONDecodeError:
+            return None
+    else:
+        msg = email_lib.message_from_bytes(raw)
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            disposition = str(part.get("Content-Disposition", ""))
+            if content_type == "text/plain" and "attachment" not in disposition:
+                payload = part.get_payload(decode=True)
+                if payload:
+                    return payload.decode("utf-8", errors="replace")
+    return None
 
 
 def _attachment_stubs_from_meta(meta: dict, actor: ActorContext) -> list[EmailAttachment]:

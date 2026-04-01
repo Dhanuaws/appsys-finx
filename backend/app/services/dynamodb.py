@@ -48,15 +48,16 @@ def search_invoices(
         # Standard: scope to tenantId
         filter_expr = Attr("tenantId").eq(actor.tenant_id)
 
-    if filters.status:
-        status_filter = None
-        for st in filters.status:
-            cond = Attr("status").eq(st)
-            status_filter = cond if status_filter is None else status_filter | cond
-        filter_expr = filter_expr & status_filter
+    # NOTE: status filter is intentionally NOT applied at the DynamoDB level.
+    # Items may store status as either `status` or `ProcessingStatus` (legacy).
+    # from_dynamo() normalises both into a consistent enum value, so we filter
+    # in Python AFTER conversion to ensure we never miss items.
 
     if filters.vendor_id:
         filter_expr = filter_expr & Attr("Supplier").contains(filters.vendor_id)
+
+    if filters.invoice_number:
+        filter_expr = filter_expr & Attr("InvoiceNumber").contains(filters.invoice_number)
 
     if filters.entity_id:
         filter_expr = filter_expr & Attr("LegalEntity").contains(filters.entity_id)
@@ -86,18 +87,31 @@ def search_invoices(
     if filters.ingestion_date_to:
         filter_expr = filter_expr & Attr("ProcessedAt").lte(filters.ingestion_date_to)
 
-    # Use a scan with filter (acceptable at small scale) or GSI if available
-    # In production, replace with GSI query on status+date for best performance
+    # Full scan with pagination loop — DynamoDB Limit caps items SCANNED (not returned),
+    # so we must paginate via LastEvaluatedKey to get ALL matching items.
     try:
-        response = table.scan(
-            FilterExpression=filter_expr,
-            Limit=min(filters.page_size * filters.page, 200),  # safety cap
-        )
+        raw_items: list[dict] = []
+        last_key = None
+        while True:
+            scan_kwargs: dict = {"FilterExpression": filter_expr}
+            if last_key:
+                scan_kwargs["ExclusiveStartKey"] = last_key
+            response = table.scan(**scan_kwargs)
+            raw_items.extend(response.get("Items", []))
+            last_key = response.get("LastEvaluatedKey")
+            if not last_key:
+                break
     except ClientError as e:
         log.error("DynamoDB scan failed: %s", e)
         return {"items": [], "total": 0, "page": filters.page, "has_more": False}
 
-    items = [Invoice.from_dynamo(item) for item in response.get("Items", [])]
+    items = [Invoice.from_dynamo(item) for item in raw_items]
+
+    # Apply status filter in Python — from_dynamo() normalises ProcessingStatus→status,
+    # so this is the only reliable place to filter by status.
+    if filters.status:
+        allowed = set(filters.status)
+        items = [i for i in items if i.status in allowed]
 
     # Sort
     reverse = filters.sort_desc
@@ -278,34 +292,163 @@ def create_fraud_case(actor: ActorContext, invoice_id: str, severity: str, reaso
         raise
 
     return case
+
+
+def update_fraud_case(actor: ActorContext, case_id: str, updates: dict) -> dict:
+    """Update mutable fields of a fraud case. Enforces tenant ownership."""
+    from datetime import datetime, timezone
+
+    settings = get_settings()
+    db = _get_resource()
+    table = db.Table(settings.table_fraud_cases)
+
+    # Verify case belongs to this tenant
+    try:
+        result = table.get_item(Key={"caseId": case_id})
+    except ClientError as e:
+        log.error("GetItem FinXFraudCases failed: %s", e)
+        raise
+
+    item = result.get("Item")
+    if not item or item.get("tenantId") != actor.tenant_id:
+        raise ValueError(f"Case {case_id} not found or access denied.")
+
+    allowed_fields = {"status", "severity", "assignee", "resolutionNotes"}
+    expr_parts = ["#updatedAt = :updatedAt"]
+    expr_names = {"#updatedAt": "updatedAt"}
+    expr_values: dict = {":updatedAt": datetime.now(timezone.utc).isoformat()}
+
+    for key, value in updates.items():
+        if key in allowed_fields and value is not None:
+            expr_parts.append(f"#{key} = :{key}")
+            expr_names[f"#{key}"] = key
+            expr_values[f":{key}"] = value
+
+    try:
+        response = table.update_item(
+            Key={"caseId": case_id},
+            UpdateExpression="SET " + ", ".join(expr_parts),
+            ExpressionAttributeNames=expr_names,
+            ExpressionAttributeValues=expr_values,
+            ReturnValues="ALL_NEW",
+        )
+    except ClientError as e:
+        log.error("UpdateItem FinXFraudCases failed: %s", e)
+        raise
+
+    return response.get("Attributes", {})
+
+
 # ── Audit Logs ────────────────────────────────────────────────
 def list_audit_logs(
     actor: ActorContext,
-    event_type: Optional[str] = None,
+    decision: Optional[str] = None,
+    reject_code: Optional[str] = None,
     document_hash: Optional[str] = None,
+    invoice_number: Optional[str] = None,
+    supplier: Optional[str] = None,
+    detected_at_from: Optional[str] = None,
+    detected_at_to: Optional[str] = None,
     limit: int = 50,
 ) -> list[AuditRecord]:
     """
     Query InvoiceAuditLayer table.
     Enforces tenant isolation.
+    Fields: AuditId, Decision, RejectLayer, RejectCode, RejectReason,
+            InvoiceNumber, Supplier, DocumentHash, DetectedAt, Sender, Subject, SourceFileName
     """
     settings = get_settings()
     db = _get_resource()
     table = db.Table(settings.table_audit_layer)
 
-    filter_expr = Attr("tenantId").eq(actor.tenant_id)
-    if event_type:
-        filter_expr = filter_expr & Attr("EventType").eq(event_type)
+    # Scan without tenant filter for ADMIN (audit layer may not have tenantId on older records)
+    filter_parts = []
+    if actor.role != "ADMIN":
+        filter_parts.append(Attr("tenantId").eq(actor.tenant_id))
+
+    if decision:
+        filter_parts.append(Attr("Decision").eq(decision.upper()))
+    if reject_code:
+        filter_parts.append(Attr("RejectCode").contains(reject_code))
     if document_hash:
-        filter_expr = filter_expr & Attr("DocumentHash").eq(document_hash)
+        filter_parts.append(Attr("DocumentHash").eq(document_hash))
+    if invoice_number:
+        filter_parts.append(Attr("InvoiceNumber").contains(invoice_number))
+    if supplier:
+        filter_parts.append(Attr("Supplier").contains(supplier))
+
+    if detected_at_from:
+        filter_parts.append(Attr("DetectedAt").gte(detected_at_from))
+
+    if detected_at_to:
+        filter_parts.append(Attr("DetectedAt").lte(detected_at_to))
+
+    scan_kwargs: dict = {}
+    if filter_parts:
+        combined = filter_parts[0]
+        for fp in filter_parts[1:]:
+            combined = combined & fp
+        scan_kwargs["FilterExpression"] = combined
 
     try:
-        response = table.scan(
-            FilterExpression=filter_expr,
-            Limit=limit,
-        )
+        # Paginate to honour the limit properly (DynamoDB Limit caps items scanned, not returned)
+        items = []
+        last_key = None
+        while len(items) < limit:
+            if last_key:
+                scan_kwargs["ExclusiveStartKey"] = last_key
+            response = table.scan(**scan_kwargs)
+            items.extend(response.get("Items", []))
+            last_key = response.get("LastEvaluatedKey")
+            if not last_key:
+                break
+        items = items[:limit]
     except ClientError as e:
         log.error("Scan InvoiceAuditLayer failed: %s", e)
         return []
 
-    return [AuditRecord.from_dynamo(item) for item in response.get("Items", [])]
+    records = [AuditRecord.from_dynamo(item) for item in items]
+    # Sort newest first
+    records.sort(key=lambda r: r.detected_at, reverse=True)
+    return records
+
+
+def get_emails_by_invoice_number(actor: ActorContext, invoice_number: str) -> list[dict]:
+    """
+    Scan RawEmailMetaData for emails matching an invoice number or subject.
+    No Limit — must paginate fully since the matching item may be anywhere in
+    the table (Limit caps items SCANNED, not items returned).
+    """
+    settings = get_settings()
+    db = _get_resource()
+    table = db.Table(settings.table_raw_email)
+    results: list[dict] = []
+    try:
+        # Primary: match InvoiceNumber field — paginate through entire table
+        last_key = None
+        while True:
+            kwargs: dict = {"FilterExpression": Attr("InvoiceNumber").eq(invoice_number)}
+            if last_key:
+                kwargs["ExclusiveStartKey"] = last_key
+            resp = table.scan(**kwargs)
+            results.extend(resp.get("Items", []))
+            last_key = resp.get("LastEvaluatedKey")
+            if not last_key or results:
+                break  # stop early once we have a match
+
+        if not results:
+            # Fallback: Subject contains invoice_number — paginate fully
+            last_key = None
+            while True:
+                kwargs = {"FilterExpression": Attr("Subject").contains(invoice_number)}
+                if last_key:
+                    kwargs["ExclusiveStartKey"] = last_key
+                resp = table.scan(**kwargs)
+                results.extend(resp.get("Items", []))
+                last_key = resp.get("LastEvaluatedKey")
+                if not last_key or results:
+                    break
+
+    except ClientError as e:
+        log.error("Scan RawEmailMetaData by invoice_number failed: %s", e)
+    return results

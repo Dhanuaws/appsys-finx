@@ -3,12 +3,19 @@ import CognitoProvider from "next-auth/providers/cognito";
 
 const handler = NextAuth({
     providers: [
-        CognitoProvider({
-            clientId: process.env.COGNITO_CLIENT_ID as string,
-            clientSecret: process.env.COGNITO_CLIENT_SECRET as string,
-            issuer: process.env.COGNITO_ISSUER as string,
-        }),
+        ...(process.env.COGNITO_CLIENT_ID && process.env.COGNITO_CLIENT_SECRET && process.env.COGNITO_ISSUER
+            ? [CognitoProvider({
+                clientId: process.env.COGNITO_CLIENT_ID,
+                clientSecret: process.env.COGNITO_CLIENT_SECRET,
+                issuer: process.env.COGNITO_ISSUER,
+            })]
+            : []
+        ),
     ],
+    pages: {
+        signIn: "/api/auth/signin",
+        error: "/api/auth/error",
+    },
     callbacks: {
         async jwt({ token, account }) {
             // Persist the raw Cognito ID Token to the token right after signin

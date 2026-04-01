@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     gsi_email_id: str = "emailId-index"
 
     # ── S3 ────────────────────────────────────────────────────
-    s3_bucket: str = "amzn-s3-nova-bucket"
-    s3_signed_url_ttl: int = 900  # 15 minutes
+    s3_bucket: str = ""  # Required — set S3_BUCKET env var
+    s3_signed_url_ttl: int = 43200  # 12 hours
 
     # ── Bedrock / Nova Lite ────────────────────────────────────
     bedrock_model_id: str = "amazon.nova-lite-v1:0"
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     environment: str = "dev"
     cors_origins: list[str] = [
         "http://localhost:3000",
-        "https://finx.appsys.io",  # Update with your prod domain
+        "http://localhost:3001",
     ]
 
     class Config:

@@ -11,9 +11,10 @@ import { useState } from "react";
 interface ChatBubbleProps {
     message: ChatMessage;
     onCitationClick?: (citation: Citation) => void;
+    onEmailView?: (invoiceNumber: string) => void;
 }
 
-export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
+export function ChatBubble({ message, onCitationClick, onEmailView }: ChatBubbleProps) {
     const isUser = message.role === "user";
     const isSystem = message.role === "system";
 
@@ -70,6 +71,8 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
                         <MessageContent
                             content={message.content}
                             isStreaming={message.isStreaming}
+                            citations={message.citations}
+                            onEmailView={onEmailView}
                         />
                     )}
                 </div>
@@ -78,11 +81,12 @@ export function ChatBubble({ message, onCitationClick }: ChatBubbleProps) {
                 {message.citations && message.citations.length > 0 && (
                     <div className="flex flex-col gap-3">
                         <div className="flex flex-wrap gap-1.5">
-                            {message.citations.map((c) => (
+                            {Array.from(new Map(message.citations.map(c => [c.id, c])).values()).map((c, i) => (
                                 <CitationBadge
-                                    key={c.id}
+                                    key={`${c.id}-${i}`}
                                     citation={c}
                                     onClick={() => onCitationClick?.(c)}
+                                    onEmailView={onEmailView}
                                 />
                             ))}
                         </div>
@@ -110,13 +114,17 @@ import React from "react";
 function MessageContent({
     content,
     isStreaming,
+    citations,
+    onEmailView,
 }: {
     content: string;
     isStreaming?: boolean;
+    citations?: Citation[];
+    onEmailView?: (invoiceNumber: string) => void;
 }) {
     // Final cleanup of any stray citation bracket string
     const cleanedContent = content.replace(/\[[a-z]+:[^\]]+\]/g, "");
-    
+
     // Simple inline Markdown Table Parser
     const lines = cleanedContent.split('\n');
     const elements: React.ReactNode[] = [];
@@ -130,7 +138,7 @@ function MessageContent({
             tableLines.push(line);
         } else {
             if (inTable) {
-                elements.push(<MarkdownTable key={`table-${i}`} lines={tableLines} />);
+                elements.push(<MarkdownTable key={`table-${i}`} lines={tableLines} onEmailView={onEmailView} />);
                 tableLines = [];
                 inTable = false;
             }
@@ -141,7 +149,7 @@ function MessageContent({
     }
 
     if (inTable) {
-        elements.push(<MarkdownTable key={`table-end`} lines={tableLines} />);
+        elements.push(<MarkdownTable key={`table-end`} lines={tableLines} onEmailView={onEmailView} />);
     }
 
     return (
@@ -151,13 +159,20 @@ function MessageContent({
     );
 }
 
-function MarkdownTable({ lines }: { lines: string[] }) {
+function MarkdownTable({ lines, onEmailView }: { lines: string[]; onEmailView?: (invoiceNumber: string) => void }) {
     if (lines.length < 2) return <pre>{lines.join('\n')}</pre>;
 
     const headers = lines[0].split('|').map(s => s.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1);
     const bodyRows = lines.slice(2).map(row =>
         row.split('|').map(s => s.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
     );
+
+    // Detect invoice-related column
+    const invoiceColIndex = headers.findIndex(h => {
+        const lower = h.toLowerCase();
+        return lower.includes("invoice number") || lower.includes("invoice no") || lower.startsWith("invoice");
+    });
+    const hasInvoiceCol = invoiceColIndex >= 0 && !!onEmailView;
 
     return (
         <div className="overflow-x-auto my-3 w-full">
@@ -167,14 +182,29 @@ function MarkdownTable({ lines }: { lines: string[] }) {
                         {headers.map((h, i) => (
                             <th key={i} className="px-3 py-2 text-left font-semibold text-finx-text-muted uppercase tracking-wider">{h}</th>
                         ))}
+                        {hasInvoiceCol && (
+                            <th key="email-header" className="px-3 py-2 text-left font-semibold text-finx-text-muted uppercase tracking-wider">Email</th>
+                        )}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-finx-border border-b border-finx-border">
                     {bodyRows.map((row, rIdx) => (
                         <tr key={rIdx} className="hover:bg-finx-surface-hover transition-colors">
                             {row.map((cell, cIdx) => (
-                                <td key={cIdx} className="px-3 py-2 text-finx-text whitespace-nowrap">{cell}</td>
+                                <td key={cIdx} className="px-3 py-2 text-finx-text max-w-[280px] break-words whitespace-normal">{cell}</td>
                             ))}
+                            {hasInvoiceCol && (
+                                <td key="email-action" className="px-3 py-2">
+                                    <button
+                                        onClick={() => onEmailView?.(row[invoiceColIndex])}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+                                        title="View email evidence"
+                                    >
+                                        <Mail size={10} />
+                                        Email
+                                    </button>
+                                </td>
+                            )}
                         </tr>
                     ))}
                 </tbody>
@@ -280,6 +310,7 @@ function DownloadActions({ citations }: { citations: Citation[] }) {
 interface CitationBadgeProps {
     citation: Citation;
     onClick?: () => void;
+    onEmailView?: (invoiceNumber: string) => void;
 }
 
 const CITATION_ICONS: Record<Citation["type"], React.ReactNode> = {
@@ -296,18 +327,41 @@ const CITATION_COLORS: Record<Citation["type"], string> = {
     case: "bg-finx-surface border-finx-border text-finx-text-muted hover:text-finx-text hover:bg-finx-surface-hover hover:border-finx-border-strong",
 };
 
-export function CitationBadge({ citation, onClick }: CitationBadgeProps) {
+export function CitationBadge({ citation, onClick, onEmailView }: CitationBadgeProps) {
+    const [loading, setLoading] = useState(false);
+
+    const handleClick = async () => {
+        if (citation.type === "email") {
+            onEmailView?.(citation.label); // label is the invoice number for email citations
+            return;
+        }
+        if ((citation.type === "invoice" || citation.type === "attachment") && citation.s3Key) {
+            setLoading(true);
+            try {
+                const res = await fetch(`/api/download?s3_key=${encodeURIComponent(citation.s3Key)}`);
+                const data = await res.json();
+                if (data.signed_url) window.open(data.signed_url, "_blank", "noopener,noreferrer");
+            } catch (e) {
+                console.error("Failed to open file:", e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        onClick?.();
+    };
+
     return (
         <button
             type="button"
-            onClick={onClick}
+            onClick={handleClick}
+            disabled={loading}
             className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-mono transition-colors duration-150 cursor-pointer",
+                "inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-mono transition-colors duration-150 cursor-pointer disabled:opacity-60",
                 CITATION_COLORS[citation.type]
             )}
             title={citation.s3Key}
         >
-            {CITATION_ICONS[citation.type]}
+            {loading ? <Loader2 size={10} className="animate-spin" /> : CITATION_ICONS[citation.type]}
             {citation.label}
         </button>
     );
@@ -316,12 +370,14 @@ export function CitationBadge({ citation, onClick }: CitationBadgeProps) {
 
 // ── Suggested prompts ─────────────────────────────────────────
 const SUGGESTED_PROMPTS = [
-    "Show me forged invoices",
-    "Duplicates from last 30 days",
-    "Top vendors by invoice volume",
+    "Show me all processed invoices so far",
+    "Show me all the processed invoices today",
+    "Are there any duplicated invoices today",
+    "Show me all the processed invoices this week",
+    "Are there any duplicated invoices this week",
     "Show unprocessed raw invoices",
     "Invoices flagged with GST mismatch",
-    "Fraud station — open high risk cases",
+    "Top vendors by invoices",
 ];
 
 interface SuggestedPromptsProps {
