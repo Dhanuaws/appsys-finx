@@ -44,7 +44,7 @@ export default function FilterPane() {
         if (s === "RAW") {
             const next = activeStatusList.includes("RAW")
                 ? activeStatusList.filter((x) => x !== "RAW")
-                : [...activeStatusList, "RAW"];
+                : [...activeStatusList, "RAW"] as InvoiceStatus[];
             setFilter("status", next.length ? next : undefined);
         } else {
             // Clicking an exclusive status: deselect if already active,

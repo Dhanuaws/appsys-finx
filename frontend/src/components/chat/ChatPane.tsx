@@ -279,7 +279,7 @@ export default function ChatPane() {
                             <span className="text-xs text-finx-text-dim">Enter to send</span>
                         </div>
                         <button
-                            onClick={handleSend}
+                            onClick={() => handleSend()}
                             disabled={!input.trim()}
                             className="w-8 h-8 gradient-brand rounded-xl flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all active:scale-95 shadow-md shadow-indigo-500/25"
                         >
